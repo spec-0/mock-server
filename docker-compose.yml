@@ -8,7 +8,7 @@
 services:
   mock-server:
     build: .
-    image: spec0/mock-server:latest
+    image: ghcr.io/spec-0/mock-server:latest
     ports:
       - "8080:8080"
     volumes:

@@ -2,8 +2,8 @@
 
 Self-hosted OpenAPI mock server. Register a spec, get instant mock responses, manage variants and logs through a bundled web UI — no account required.
 
-[![CI](https://github.com/spec0/mock-server/actions/workflows/ci.yml/badge.svg)](https://github.com/spec0/mock-server/actions/workflows/ci.yml)
-[![Docker Hub](https://img.shields.io/docker/v/spec0/mock-server?label=docker)](https://hub.docker.com/r/spec0/mock-server)
+[![CI](https://github.com/spec-0/mock-server/actions/workflows/ci.yml/badge.svg)](https://github.com/spec-0/mock-server/actions/workflows/ci.yml)
+[![GHCR](https://img.shields.io/badge/ghcr.io-spec--0%2Fmock--server-blue?logo=github)](https://github.com/spec-0/mock-server/pkgs/container/mock-server)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 ---
@@ -11,7 +11,7 @@ Self-hosted OpenAPI mock server. Register a spec, get instant mock responses, ma
 ## Quick start
 
 ```bash
-docker run -d -p 8080:8080 -v spec0-mock-data:/data spec0/mock-server
+docker run -d -p 8080:8080 -v spec0-mock-data:/data ghcr.io/spec-0/mock-server
 # open http://localhost:8080/ui/
 ```
 
