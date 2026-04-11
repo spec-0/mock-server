@@ -193,7 +193,7 @@ export default function MockServerSettings({
                 </CardDescription>
               </div>
               {onMcpToggle && (
-                <Switch checked={mcpEnabled ?? false} onCheckedChange={onMcpToggle} />
+                <Switch checked={mcpEnabled ?? false} onCheckedChange={onMcpToggle} aria-label="Enable MCP Server" />
               )}
             </div>
           </CardHeader>
@@ -308,7 +308,7 @@ export default function MockServerSettings({
             </div>
             <div>
               <Label className="text-sm font-medium">Created By</Label>
-              <p className="text-sm text-muted-foreground">{mockServer.createdBy}</p>
+              <p className="text-sm text-muted-foreground">{mockServer.createdBy ?? '—'}</p>
             </div>
             <div>
               <Label className="text-sm font-medium">Created At</Label>

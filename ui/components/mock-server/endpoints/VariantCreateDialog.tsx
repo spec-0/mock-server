@@ -98,7 +98,7 @@ export default function VariantCreateDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Create Response Variant
-            <Badge variant="outline" className={variantTab === 'cel' ? 'text-purple-700 border-purple-300 bg-purple-50' : ''}>
+            <Badge aria-hidden="true" variant="outline" className={variantTab === 'cel' ? 'text-purple-700 border-purple-300 bg-purple-50' : ''}>
               {variantTab === 'cel' ? 'CEL' : 'Static'}
             </Badge>
           </DialogTitle>
@@ -138,6 +138,8 @@ export default function VariantCreateDialog({
             <Input
               id="displayOrder"
               type="number"
+              min={0}
+              max={9999}
               value={displayOrder}
               onChange={(e) => setDisplayOrder(parseInt(e.target.value) || 1)}
             />

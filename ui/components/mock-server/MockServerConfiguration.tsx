@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Save, RefreshCw, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MockServerConfig } from '@/services/mockServerAdminClient';
@@ -204,13 +203,13 @@ export default function MockServerConfiguration({ config, onConfigUpdate, onSync
                 <Input
                   id="rateLimitPerMinute"
                   type="number"
-                  min="1"
+                  min="-1"
                   max="10000"
                   value={formData.rateLimitPerMinute}
                   onChange={(e) => setFormData(prev => ({ ...prev, rateLimitPerMinute: parseInt(e.target.value) }))}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Maximum requests allowed per minute per client
+                  Maximum requests per minute per client. Use -1 for unlimited.
                 </p>
               </div>
 
@@ -245,18 +244,16 @@ export default function MockServerConfiguration({ config, onConfigUpdate, onSync
               </div>
             </div>
 
-            {/* Info Alert */}
-            <Alert>
-              <AlertDescription>
-                <strong>Configuration Tips:</strong>
-                <ul className="mt-2 space-y-1 text-sm">
-                  <li>• <strong>Random:</strong> Best for testing different scenarios</li>
-                  <li>• <strong>Round Robin:</strong> Good for load testing</li>
-                  <li>• <strong>Sequential:</strong> Useful for testing workflows</li>
-                  <li>• <strong>Default Only:</strong> Always returns the default variant</li>
-                </ul>
-              </AlertDescription>
-            </Alert>
+            {/* Configuration Tips */}
+            <div role="note" className="rounded-lg border bg-muted/40 p-4 text-sm">
+              <strong>Configuration Tips:</strong>
+              <ul className="mt-2 space-y-1">
+                <li>• <strong>Random:</strong> Best for testing different scenarios</li>
+                <li>• <strong>Round Robin:</strong> Good for load testing</li>
+                <li>• <strong>Sequential:</strong> Useful for testing workflows</li>
+                <li>• <strong>Default Only:</strong> Always returns the default variant</li>
+              </ul>
+            </div>
 
             {/* Actions */}
             <div className="flex items-center justify-between pt-4 border-t">
@@ -306,7 +303,7 @@ export default function MockServerConfiguration({ config, onConfigUpdate, onSync
               </div>
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Rate Limit</span>
-                <span className="text-sm text-muted-foreground">{config.rateLimitPerMinute}/min</span>
+                <span className="text-sm text-muted-foreground">{config.rateLimitPerMinute === -1 ? 'Unlimited' : `${config.rateLimitPerMinute}/min`}</span>
               </div>
             </div>
           </div>

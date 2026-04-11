@@ -102,9 +102,10 @@ export default function OperationTestPanel({
                           variant="outline"
                           size="icon"
                           onClick={onCopyUrl}
+                          aria-label="Copy mock URL"
                           className="border-primary-200 hover:bg-primary-50 dark:border-border dark:hover:bg-muted h-8 w-8"
                         >
-                          <Copy className="h-4 w-4" />
+                          <Copy className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>Copy full mock URL (with path parameters)</TooltipContent>
@@ -118,9 +119,10 @@ export default function OperationTestPanel({
                           size="icon"
                           onClick={onCopyCurl}
                           disabled={!selectedOperation.path}
+                          aria-label="Copy cURL command"
                           className="border-primary-200 hover:bg-primary-50 dark:border-border dark:hover:bg-muted h-8 w-8"
                         >
-                          <Terminal className="h-4 w-4" />
+                          <Terminal className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
@@ -137,12 +139,13 @@ export default function OperationTestPanel({
                         <Button
                           onClick={onTest}
                           disabled={!selectedOperation.path || isTesting}
+                          aria-label="Test endpoint"
                           className="bg-gradient-to-r from-primary-500 to-secondary-600 hover:from-primary-600 hover:to-secondary-700 text-white border-0 h-8 w-8 p-0"
                         >
                           {isTesting ? (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
                           ) : (
-                            <Play className="h-4 w-4" />
+                            <Play className="h-4 w-4" aria-hidden="true" />
                           )}
                         </Button>
                       </TooltipTrigger>
@@ -245,7 +248,7 @@ export default function OperationTestPanel({
               ) : (
                 <>
                   <div className="flex items-center justify-between mb-2 h-[28px] flex-shrink-0">
-                    <Label className="text-sm font-medium text-primary-700 opacity-0 pointer-events-none">Request Body (JSON)</Label>
+                    <span className="h-[20px]" aria-hidden="true" />
                   </div>
                   <div className="flex-1 min-h-[200px]" />
                 </>

@@ -543,7 +543,10 @@ export default function MockServerEndpoints({
                   </div>
                   <div className="flex items-center space-x-2">
                     <Badge variant="outline" className="bg-white/20 text-white border-white/30">
-                      {selectedOperation.operationId ? (variantsCount[selectedOperation.operationId] || 0) : 0} variants
+                      {(() => {
+                        const count = selectedOperation.operationId ? (variantsCount[selectedOperation.operationId] || 0) : 0;
+                        return `${count} ${count === 1 ? 'variant' : 'variants'}`;
+                      })()}
                     </Badge>
                     {selectedOperationConfig?.isEnabled ? (
                       <Badge className="bg-green-100 text-green-800">Enabled</Badge>

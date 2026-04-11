@@ -145,37 +145,38 @@ export default function VariantList({
                           <Button
                             variant="ghost"
                             size="sm"
-                            title="View details"
+                            aria-label={`View details for ${variant.responseName}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               onViewDetail(variant);
                             }}
                             className="h-8 w-8 p-0"
                           >
-                            <Eye className="h-3 w-3" />
+                            <Eye className="h-3 w-3" aria-hidden="true" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            title="Edit variant"
+                            aria-label={`Edit ${variant.responseName}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               onEdit(variant);
                             }}
                             className="h-8 w-8 p-0"
                           >
-                            <Edit className="h-3 w-3" />
+                            <Edit className="h-3 w-3" aria-hidden="true" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
+                            aria-label={`Delete ${variant.responseName}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               variant.variantId && onDelete(variant.variantId);
                             }}
                             className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-3 w-3" aria-hidden="true" />
                           </Button>
                         </div>
                       </div>
