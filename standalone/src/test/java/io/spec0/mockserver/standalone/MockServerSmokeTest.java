@@ -2,6 +2,8 @@ package io.spec0.mockserver.standalone;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -18,13 +20,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 
-import java.util.List;
-import java.util.Map;
-
 /**
- * Smoke tests covering the end-to-end REST flow of the standalone mock server:
- * register spec → create server → list → send mock request → create variant →
- * update variant → get logs → patch server → get operations → delete.
+ * Smoke tests covering the end-to-end REST flow of the standalone mock server: register spec →
+ * create server → list → send mock request → create variant → update variant → get logs → patch
+ * server → get operations → delete.
  */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -160,8 +159,7 @@ class MockServerSmokeTest {
   @Test
   @Order(7)
   void getMockServer_returnsCorrectServer() {
-    ResponseEntity<Map> resp =
-        rest.getForEntity("/mock-server/servers/" + mockServerId, Map.class);
+    ResponseEntity<Map> resp = rest.getForEntity("/mock-server/servers/" + mockServerId, Map.class);
     assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(resp.getBody().get("mockServerId")).isEqualTo(mockServerId);
     assertThat(resp.getBody().get("name")).isEqualTo("petstore-mock");
@@ -188,7 +186,8 @@ class MockServerSmokeTest {
     ResponseEntity<String> resp =
         rest.getForEntity("/mock/" + mockServerId + "/pets", String.class);
     // Accepts 200 (auto-generated) or 404 (operation not matched is fine too)
-    assertThat(resp.getStatusCode().is2xxSuccessful() || resp.getStatusCode() == HttpStatus.NOT_FOUND)
+    assertThat(
+            resp.getStatusCode().is2xxSuccessful() || resp.getStatusCode() == HttpStatus.NOT_FOUND)
         .isTrue();
     // Key header from the mock engine
     String mockHeader = resp.getHeaders().getFirst("X-spec0-Mock-Response");
@@ -237,9 +236,19 @@ class MockServerSmokeTest {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
     Map<String, Object> update =
-        Map.of("operationId", "listPets", "responseName", "Empty list v2",
-            "statusCode", "200", "responseBody", "[{\"id\":1,\"name\":\"Fluffy\"}]",
-            "isDefault", true, "displayOrder", 0);
+        Map.of(
+            "operationId",
+            "listPets",
+            "responseName",
+            "Empty list v2",
+            "statusCode",
+            "200",
+            "responseBody",
+            "[{\"id\":1,\"name\":\"Fluffy\"}]",
+            "isDefault",
+            true,
+            "displayOrder",
+            0);
 
     ResponseEntity<Map> resp =
         rest.exchange(
@@ -388,9 +397,7 @@ class MockServerSmokeTest {
     // Custom variant deleted; auto-generated ones may remain
     List<?> remaining = resp.getBody();
     boolean customGone =
-        remaining.stream()
-            .noneMatch(
-                v -> variantId.equals(((Map<?, ?>) v).get("variantId")));
+        remaining.stream().noneMatch(v -> variantId.equals(((Map<?, ?>) v).get("variantId")));
     assertThat(customGone).isTrue();
   }
 
@@ -398,8 +405,7 @@ class MockServerSmokeTest {
   @Order(22)
   void deleteMockServer_succeeds() {
     rest.delete("/mock-server/servers/" + mockServerId);
-    ResponseEntity<Map> resp =
-        rest.getForEntity("/mock-server/servers/" + mockServerId, Map.class);
+    ResponseEntity<Map> resp = rest.getForEntity("/mock-server/servers/" + mockServerId, Map.class);
     assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
   }
 }

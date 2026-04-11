@@ -104,7 +104,8 @@ public class MockServerController {
     if (mockServerService.findById(mockServerId).isEmpty()) {
       return ResponseEntity.notFound().build();
     }
-    Boolean enabled = body.containsKey("isEnabled") ? Boolean.TRUE.equals(body.get("isEnabled")) : null;
+    Boolean enabled =
+        body.containsKey("isEnabled") ? Boolean.TRUE.equals(body.get("isEnabled")) : null;
     MockResponseStrategy strategy = null;
     if (body.containsKey("responseStrategy") && body.get("responseStrategy") != null) {
       strategy = MockResponseStrategy.valueOf((String) body.get("responseStrategy"));
@@ -114,8 +115,8 @@ public class MockServerController {
   }
 
   /**
-   * Returns the list of operations parsed from the spec associated with this mock server.
-   * Useful for the UI Endpoints tab — provides method, path, and operationId for each operation.
+   * Returns the list of operations parsed from the spec associated with this mock server. Useful
+   * for the UI Endpoints tab — provides method, path, and operationId for each operation.
    */
   @GetMapping("/{mockServerId}/config")
   public ResponseEntity<MockServerStandaloneConfigDto> getStandaloneConfig(
@@ -163,10 +164,8 @@ public class MockServerController {
       mockServerService.updateStrategy(
           mockServerId, MockResponseStrategy.valueOf((String) body.get("defaultStrategy")));
     }
-    MockServerEntity server =
-        mockServerService.findById(mockServerId).orElseThrow();
-    MockServerConfigEntity saved =
-        configRepository.findByMockServerId(mockServerId).orElseThrow();
+    MockServerEntity server = mockServerService.findById(mockServerId).orElseThrow();
+    MockServerConfigEntity saved = configRepository.findByMockServerId(mockServerId).orElseThrow();
     return ResponseEntity.ok(
         new MockServerStandaloneConfigDto(
             server.getDefaultStrategy(),
@@ -180,10 +179,7 @@ public class MockServerController {
   public ResponseEntity<?> listSpecOperations(@PathVariable UUID mockServerId) {
     return mockServerService
         .findById(mockServerId)
-        .map(
-            server ->
-                ResponseEntity.ok(
-                    operationRepository.findBySpecId(server.getSpecId())))
+        .map(server -> ResponseEntity.ok(operationRepository.findBySpecId(server.getSpecId())))
         .orElse(ResponseEntity.notFound().build());
   }
 
@@ -198,8 +194,7 @@ public class MockServerController {
   // ── Environment variables (used in CEL expressions as env.KEY) ──────────
 
   @GetMapping("/{mockServerId}/env-vars")
-  public ResponseEntity<List<MockServerEnvVarEntity>> listEnvVars(
-      @PathVariable UUID mockServerId) {
+  public ResponseEntity<List<MockServerEnvVarEntity>> listEnvVars(@PathVariable UUID mockServerId) {
     if (mockServerService.findById(mockServerId).isEmpty()) {
       return ResponseEntity.notFound().build();
     }
@@ -245,7 +240,8 @@ public class MockServerController {
   @DeleteMapping("/{mockServerId}/env-vars/{envVarId}")
   public ResponseEntity<Void> deleteEnvVar(
       @PathVariable UUID mockServerId, @PathVariable UUID envVarId) {
-    if (envVarRepository.findById(envVarId)
+    if (envVarRepository
+        .findById(envVarId)
         .filter(e -> e.getMockServerId().equals(mockServerId))
         .isEmpty()) {
       return ResponseEntity.<Void>notFound().build();

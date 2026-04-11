@@ -3,7 +3,9 @@ package io.spec0.mockserver.error;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 
-/** Client-facing API failure with HTTP status, machine {@link #code}, and optional {@link #details}. */
+/**
+ * Client-facing API failure with HTTP status, machine {@link #code}, and optional {@link #details}.
+ */
 public final class MockApiException extends RuntimeException {
 
   private final HttpStatus status;

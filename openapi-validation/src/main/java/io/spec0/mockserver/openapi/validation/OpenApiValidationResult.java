@@ -5,9 +5,8 @@ import java.util.List;
 /**
  * Outcome of validating a JSON instance against an OpenAPI-derived JSON Schema.
  *
- * <p>{@link #skipped} results use {@code valid == false} so callers must not treat {@link
- * #valid()} alone as “passed validation” — check {@link #skipped()} first when enforcing STRICT
- * policies.
+ * <p>{@link #skipped} results use {@code valid == false} so callers must not treat {@link #valid()}
+ * alone as “passed validation” — check {@link #skipped()} first when enforcing STRICT policies.
  */
 public record OpenApiValidationResult(
     boolean valid, boolean skipped, String skipReason, List<String> errors) {

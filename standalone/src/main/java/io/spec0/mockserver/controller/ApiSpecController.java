@@ -17,8 +17,7 @@ public class ApiSpecController {
   private final ApiSpecServicePort apiSpecService;
 
   @PostMapping
-  public ResponseEntity<ApiSpecEntity> registerSpec(
-      @RequestBody Map<String, String> body) {
+  public ResponseEntity<ApiSpecEntity> registerSpec(@RequestBody Map<String, String> body) {
     String specName = body.get("specName");
     String specContent = body.get("specContent");
     if (specName == null || specContent == null) {

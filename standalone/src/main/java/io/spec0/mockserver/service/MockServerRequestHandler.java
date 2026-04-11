@@ -84,8 +84,7 @@ public class MockServerRequestHandler {
             .orElse(SchemaValidationMode.OFF);
     if (validationMode != SchemaValidationMode.OFF) {
       ResponseEntity<JsonNode> validationError =
-          validateIncomingRequest(
-              server.getSpecId(), operationId, request, validationMode);
+          validateIncomingRequest(server.getSpecId(), operationId, request, validationMode);
       if (validationError != null) {
         return validationError;
       }
@@ -119,8 +118,12 @@ public class MockServerRequestHandler {
           celEngine.evaluate(selected.getCelExpression(), ctx, envVars);
       if (celResult.isPresent()) {
         coreService.logRequest(
-            mockServerId, operationId, path, method,
-            String.valueOf(celResult.get().status()), selected.getVariantId());
+            mockServerId,
+            operationId,
+            path,
+            method,
+            String.valueOf(celResult.get().status()),
+            selected.getVariantId());
         return buildCelResponse(celResult.get(), selected, operationId);
       }
       // CEL eval failed — fall through to static responseBody
@@ -130,12 +133,7 @@ public class MockServerRequestHandler {
     }
 
     coreService.logRequest(
-        mockServerId,
-        operationId,
-        path,
-        method,
-        selected.getStatusCode(),
-        selected.getVariantId());
+        mockServerId, operationId, path, method, selected.getStatusCode(), selected.getVariantId());
 
     return buildResponse(selected, operationId);
   }
@@ -170,13 +168,10 @@ public class MockServerRequestHandler {
     }
 
     // Fallback: synthetic
-    return new ResolvedOperation(
-        ApiSpecServiceImpl.synthesiseOperationId(method, path), Map.of());
+    return new ResolvedOperation(ApiSpecServiceImpl.synthesiseOperationId(method, path), Map.of());
   }
 
-  /**
-   * Kept for backwards-compat with existing callers in tests.
-   */
+  /** Kept for backwards-compat with existing callers in tests. */
   String resolveOperationId(UUID specId, String path, String method, String headerOverride) {
     return resolveOperation(specId, path, method, headerOverride).operationId();
   }
@@ -247,11 +242,10 @@ public class MockServerRequestHandler {
   }
 
   private ResponseEntity<JsonNode> buildCelResponse(
-      CelExpressionEngine.CelResult result,
-      MockResponseVariantEntity variant,
-      String operationId) {
+      CelExpressionEngine.CelResult result, MockResponseVariantEntity variant, String operationId) {
 
-    JsonNode body = result.body() != null ? result.body() : parseJsonBody(variant.getResponseBody());
+    JsonNode body =
+        result.body() != null ? result.body() : parseJsonBody(variant.getResponseBody());
 
     ResponseEntity.BodyBuilder builder =
         ResponseEntity.status(result.status())
@@ -280,10 +274,7 @@ public class MockServerRequestHandler {
   // ── CEL context helpers ──────────────────────────────────────────────────
 
   private CelExpressionEngine.CelRequestContext buildCelContext(
-      HttpServletRequest request,
-      String path,
-      String method,
-      Map<String, Object> pathParams) {
+      HttpServletRequest request, String path, String method, Map<String, Object> pathParams) {
 
     // Query params
     Map<String, Object> queryParams = new HashMap<>();
@@ -320,8 +311,8 @@ public class MockServerRequestHandler {
   }
 
   /**
-   * Extracts path parameters by matching a path template against an actual path.
-   * Returns null if the path doesn't match the template.
+   * Extracts path parameters by matching a path template against an actual path. Returns null if
+   * the path doesn't match the template.
    *
    * <p>Example: template="/users/{id}", path="/users/123" → {"id": "123"}
    */
@@ -360,10 +351,7 @@ public class MockServerRequestHandler {
   }
 
   private ResponseEntity<JsonNode> validateIncomingRequest(
-      UUID specId,
-      String operationId,
-      HttpServletRequest request,
-      SchemaValidationMode mode) {
+      UUID specId, String operationId, HttpServletRequest request, SchemaValidationMode mode) {
     byte[] raw = readRawBody(request);
     String contentType = request.getContentType();
     log.trace(

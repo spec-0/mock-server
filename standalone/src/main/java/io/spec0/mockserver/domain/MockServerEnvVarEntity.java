@@ -9,16 +9,14 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 /**
- * Per-mock-server environment variable accessible in CEL expressions as {@code env.MY_KEY}.
- * Stored in the {@code mock_server_env_vars} table.
+ * Per-mock-server environment variable accessible in CEL expressions as {@code env.MY_KEY}. Stored
+ * in the {@code mock_server_env_vars} table.
  */
 @Entity
 @Table(
     name = "mock_server_env_vars",
     schema = "mock_server",
-    indexes = {
-      @Index(name = "idx_mev_server_id", columnList = "mock_server_id")
-    })
+    indexes = {@Index(name = "idx_mev_server_id", columnList = "mock_server_id")})
 @Getter
 @Setter
 @NoArgsConstructor

@@ -9,9 +9,9 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 /**
- * A specific mock response variant for an operation. Multiple variants can exist per
- * (mockServerId, operationId, statusCode) combination. The active variant returned depends on the
- * configured MockResponseStrategy.
+ * A specific mock response variant for an operation. Multiple variants can exist per (mockServerId,
+ * operationId, statusCode) combination. The active variant returned depends on the configured
+ * MockResponseStrategy.
  */
 @Entity
 @Table(
@@ -63,9 +63,9 @@ public class MockResponseVariantEntity {
   private Integer displayOrder = 0;
 
   /**
-   * Optional CEL expression. When non-null, this is a CEL variant: the expression is evaluated
-   * at request time and its result overrides the response. If the expression throws or returns
-   * null, falls back to the static {@code responseBody}. When null, this is a static variant.
+   * Optional CEL expression. When non-null, this is a CEL variant: the expression is evaluated at
+   * request time and its result overrides the response. If the expression throws or returns null,
+   * falls back to the static {@code responseBody}. When null, this is a static variant.
    */
   @Column(name = "cel_expression", columnDefinition = "text")
   private String celExpression;

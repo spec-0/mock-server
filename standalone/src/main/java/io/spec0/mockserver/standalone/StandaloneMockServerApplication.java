@@ -6,10 +6,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * Self-hosted standalone mock server.
  *
- * <p>Provides the full mock server management REST API and UI backed by an embedded H2 database.
- * No platform authentication, teams, or org management — this is the open-source core.
+ * <p>Provides the full mock server management REST API and UI backed by an embedded H2 database. No
+ * platform authentication, teams, or org management — this is the open-source core.
  *
  * <p>Endpoints:
+ *
  * <ul>
  *   <li>Mock requests: {@code ANY /mock/{mockServerId}/**}
  *   <li>Spec management: {@code /mock-server/specs}

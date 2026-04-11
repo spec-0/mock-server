@@ -37,8 +37,8 @@ import org.springframework.stereotype.Service;
  *   <li>{@code env} — per-server environment variables (key → value strings)
  * </ul>
  *
- * <p><strong>CEL map literals:</strong> use single-quoted keys (e.g. {@code {'status': 200}}). A bare
- * identifier as a map key is a variable reference, not a string key. Request header names are
+ * <p><strong>CEL map literals:</strong> use single-quoted keys (e.g. {@code {'status': 200}}). A
+ * bare identifier as a map key is a variable reference, not a string key. Request header names are
  * lowercased (e.g. {@code Session-Id} → {@code session-id}).
  *
  * <p>Expressions must evaluate to a map with:
@@ -67,11 +67,9 @@ public class CelExpressionEngine {
             .addVar("env", SimpleType.DYN)
             .addFunctionDeclarations(
                 CelFunctionDecl.newFunctionDeclaration(
-                    "uuid",
-                    CelOverloadDecl.newGlobalOverload("uuid_0", SimpleType.STRING)),
+                    "uuid", CelOverloadDecl.newGlobalOverload("uuid_0", SimpleType.STRING)),
                 CelFunctionDecl.newFunctionDeclaration(
-                    "now",
-                    CelOverloadDecl.newGlobalOverload("now_0", SimpleType.STRING)),
+                    "now", CelOverloadDecl.newGlobalOverload("now_0", SimpleType.STRING)),
                 CelFunctionDecl.newFunctionDeclaration(
                     "randomInt",
                     CelOverloadDecl.newGlobalOverload(
@@ -83,14 +81,18 @@ public class CelExpressionEngine {
             .addFunctionBindings(
                 // 0-arg functions: use the raw CelFunctionOverload form with empty arg list
                 CelFunctionBinding.from(
-                    "uuid_0", ImmutableList.of(),
+                    "uuid_0",
+                    ImmutableList.of(),
                     (CelFunctionOverload) args -> UUID.randomUUID().toString()),
                 CelFunctionBinding.from(
-                    "now_0", ImmutableList.of(),
+                    "now_0",
+                    ImmutableList.of(),
                     (CelFunctionOverload) args -> Instant.now().toString()),
                 // 2-arg function: Long params (CEL integers are 64-bit)
                 CelFunctionBinding.from(
-                    "random_int_2", Long.class, Long.class,
+                    "random_int_2",
+                    Long.class,
+                    Long.class,
                     (a, b) -> ThreadLocalRandom.current().nextLong(a, b)))
             .build();
   }
@@ -155,7 +157,8 @@ public class CelExpressionEngine {
   @SuppressWarnings("unchecked")
   private Optional<CelResult> extractResult(Object raw) {
     if (!(raw instanceof Map<?, ?> resultMap)) {
-      log.warn("CEL expression did not return a map, got: {}", raw == null ? "null" : raw.getClass());
+      log.warn(
+          "CEL expression did not return a map, got: {}", raw == null ? "null" : raw.getClass());
       return Optional.empty();
     }
 
@@ -181,11 +184,12 @@ public class CelExpressionEngine {
     Map<String, String> headers = new HashMap<>();
     Object headersRaw = resultMap.get("headers");
     if (headersRaw instanceof Map<?, ?> headersMap) {
-      headersMap.forEach((k, v) -> {
-        if (k instanceof String && v instanceof String) {
-          headers.put((String) k, (String) v);
-        }
-      });
+      headersMap.forEach(
+          (k, v) -> {
+            if (k instanceof String && v instanceof String) {
+              headers.put((String) k, (String) v);
+            }
+          });
     }
 
     return Optional.of(new CelResult(status, body, headers));

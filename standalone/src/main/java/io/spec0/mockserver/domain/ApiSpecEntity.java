@@ -10,8 +10,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 /**
- * Represents an immutable OpenAPI specification. Once registered, specContent cannot be changed —
- * a spec update always creates a new ApiSpecEntity with a new specId.
+ * Represents an immutable OpenAPI specification. Once registered, specContent cannot be changed — a
+ * spec update always creates a new ApiSpecEntity with a new specId.
  */
 @Entity
 @Table(name = "api_specs", schema = "mock_server")
@@ -33,7 +33,9 @@ public class ApiSpecEntity {
   @Column(name = "spec_content", nullable = false, columnDefinition = "text")
   private String specContent;
 
-  /** SHA-256 hex digest of specContent — used to detect spec changes and enable idempotent imports. */
+  /**
+   * SHA-256 hex digest of specContent — used to detect spec changes and enable idempotent imports.
+   */
   @Column(name = "spec_hash", nullable = false, length = 64)
   private String specHash;
 

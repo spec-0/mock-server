@@ -51,11 +51,7 @@ public class MockServerOperationEntity {
   private LocalDateTime createdAt;
 
   public MockServerOperationEntity(
-      UUID specId,
-      String operationId,
-      String httpMethod,
-      String path,
-      String successStatusCode) {
+      UUID specId, String operationId, String httpMethod, String path, String successStatusCode) {
     this.specId = specId;
     this.operationId = operationId;
     this.httpMethod = httpMethod;

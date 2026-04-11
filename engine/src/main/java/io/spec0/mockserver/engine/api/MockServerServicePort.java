@@ -7,7 +7,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** Application API implemented by {@link io.spec0.mockserver.engine.service.DefaultMockServerService}. */
+/**
+ * Application API implemented by {@link
+ * io.spec0.mockserver.engine.service.DefaultMockServerService}.
+ */
 public interface MockServerServicePort {
 
   MockServer createMockServer(UUID specId, String name, MockResponseStrategy strategy);
@@ -46,7 +49,10 @@ public interface MockServerServicePort {
   List<MockOperationConfig> getOperationConfigs(UUID mockServerId);
 
   MockOperationConfig updateOperationConfig(
-      UUID mockServerId, String operationId, Boolean enabled, MockResponseStrategy strategyOverride);
+      UUID mockServerId,
+      String operationId,
+      Boolean enabled,
+      MockResponseStrategy strategyOverride);
 
   Optional<MockServerConfig> getMockServerConfig(UUID mockServerId);
 

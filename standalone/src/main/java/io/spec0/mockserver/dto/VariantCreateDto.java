@@ -18,10 +18,10 @@ public class VariantCreateDto {
   private Integer displayOrder;
 
   /**
-   * Optional CEL expression. When set, this is a CEL variant evaluated at request time.
-   * The expression receives {@code request} and {@code env} context variables and must return
-   * a map with {@code status} (int), {@code body} (any), and optional {@code headers} (map).
-   * When null, this is a static variant and {@code responseBody} is used directly.
+   * Optional CEL expression. When set, this is a CEL variant evaluated at request time. The
+   * expression receives {@code request} and {@code env} context variables and must return a map
+   * with {@code status} (int), {@code body} (any), and optional {@code headers} (map). When null,
+   * this is a static variant and {@code responseBody} is used directly.
    */
   private String celExpression;
 }

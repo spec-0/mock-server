@@ -43,8 +43,10 @@ public class MockServerExportDto {
     private String statusCode;
     private String responseBody;
     private String headers;
+
     @com.fasterxml.jackson.annotation.JsonProperty("isDefault")
     private boolean defaultVariant;
+
     private int displayOrder;
   }
 }

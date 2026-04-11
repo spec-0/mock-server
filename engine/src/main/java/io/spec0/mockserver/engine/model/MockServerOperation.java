@@ -20,11 +20,7 @@ public class MockServerOperation {
   private LocalDateTime createdAt;
 
   public MockServerOperation(
-      UUID specId,
-      String operationId,
-      String httpMethod,
-      String path,
-      String successStatusCode) {
+      UUID specId, String operationId, String httpMethod, String path, String successStatusCode) {
     this.specId = specId;
     this.operationId = operationId;
     this.httpMethod = httpMethod;

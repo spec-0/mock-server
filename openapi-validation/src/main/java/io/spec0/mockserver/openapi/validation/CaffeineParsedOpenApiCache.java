@@ -19,17 +19,10 @@ public final class CaffeineParsedOpenApiCache implements ParsedOpenApiCache {
   private final OpenApiSpecParser parser;
 
   public CaffeineParsedOpenApiCache(
-      SpecContentLoader loader,
-      OpenApiSpecParser parser,
-      Duration ttl,
-      long maximumSize) {
+      SpecContentLoader loader, OpenApiSpecParser parser, Duration ttl, long maximumSize) {
     this.loader = Objects.requireNonNull(loader);
     this.parser = Objects.requireNonNull(parser);
-    this.cache =
-        Caffeine.newBuilder()
-            .expireAfterWrite(ttl)
-            .maximumSize(maximumSize)
-            .build();
+    this.cache = Caffeine.newBuilder().expireAfterWrite(ttl).maximumSize(maximumSize).build();
   }
 
   @Override
@@ -41,7 +34,8 @@ public final class CaffeineParsedOpenApiCache implements ParsedOpenApiCache {
             log.trace("parsedOpenApiCache miss specId={} (loading and parsing)", id);
           }
           return parser.parse(
-              loader.loadContent(id)
+              loader
+                  .loadContent(id)
                   .orElseThrow(() -> new IllegalArgumentException("Unknown spec id: " + id)));
         });
   }

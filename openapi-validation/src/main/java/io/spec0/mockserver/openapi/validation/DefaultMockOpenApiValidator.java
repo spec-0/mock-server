@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Validates JSON instances against OpenAPI {@link Schema} fragments using networknt
  * json-schema-validator <strong>2.x</strong> ({@link SchemaRegistry}, {@link Schema}, {@link
- * Error}). See
- * <a href="https://github.com/networknt/json-schema-validator/blob/master/doc/migration-2.0.0.md">migration-2.0.0</a>.
+ * Error}). See <a
+ * href="https://github.com/networknt/json-schema-validator/blob/master/doc/migration-2.0.0.md">migration-2.0.0</a>.
  *
  * <p>OpenAPI 3.0 vs 3.1 use different JSON Schema dialects; we select {@link
  * Dialects#getOpenApi30()} or {@link Dialects#getOpenApi31()} from the parent document's {@code
@@ -141,9 +141,7 @@ public final class DefaultMockOpenApiValidator implements MockOpenApiValidator {
             specId,
             operationId,
             statusCode,
-            "no_response_for_status (tried status="
-                + statusKey
-                + " and default)");
+            "no_response_for_status (tried status=" + statusKey + " and default)");
         return OpenApiValidationResult.skipped("no_response_for_status");
       }
       MediaType json = jsonMediaType(resp.getContent());

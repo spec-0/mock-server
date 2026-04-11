@@ -57,16 +57,14 @@ class DefaultMockOpenApiValidatorTest {
   @Test
   void openapi30_requestMatchesSchema() throws Exception {
     JsonNode body = mapper.readTree("{\"name\":\"dog\"}");
-    OpenApiValidationResult r =
-        validator30.validateRequestBody(SPEC, "createPet", body, true);
+    OpenApiValidationResult r = validator30.validateRequestBody(SPEC, "createPet", body, true);
     assertTrue(r.valid() || r.skipped(), r.toString());
   }
 
   @Test
   void openapi30_requestViolatesSchema() throws Exception {
     JsonNode body = mapper.readTree("{\"wrong\":1}");
-    OpenApiValidationResult r =
-        validator30.validateRequestBody(SPEC, "createPet", body, true);
+    OpenApiValidationResult r = validator30.validateRequestBody(SPEC, "createPet", body, true);
     assertFalse(r.valid());
   }
 
@@ -81,12 +79,14 @@ class DefaultMockOpenApiValidatorTest {
   @Test
   void openapi31_roundTrip() throws Exception {
     JsonNode body = mapper.readTree("{\"x\":1}");
-    OpenApiValidationResult r =
-        validator31.validateRequestBody(SPEC, "createItem", body, true);
+    OpenApiValidationResult r = validator31.validateRequestBody(SPEC, "createItem", body, true);
     assertTrue(r.valid() || r.skipped(), r.toString());
   }
 
-  /** Regression: $ref '#/components/schemas/...' must not break networknt (needs resolveFully parse). */
+  /**
+   * Regression: $ref '#/components/schemas/...' must not break networknt (needs resolveFully
+   * parse).
+   */
   @Test
   void openapi30_responseWrongDocumentedStatus_isSkippedNotValid() throws Exception {
     JsonNode body = mapper.readTree("{\"anything\":true}");
@@ -114,9 +114,7 @@ class DefaultMockOpenApiValidatorTest {
         new OpenApiSpecParser()
             .parse(
                 new String(
-                    getClass()
-                        .getResourceAsStream("/openapi-30-component-ref.yaml")
-                        .readAllBytes(),
+                    getClass().getResourceAsStream("/openapi-30-component-ref.yaml").readAllBytes(),
                     StandardCharsets.UTF_8));
     DefaultMockOpenApiValidator v = new DefaultMockOpenApiValidator(newFixedCache(api), mapper);
     // Cart schema requires {id: string}. Body {wrong:1} is missing required 'id'.
@@ -132,9 +130,7 @@ class DefaultMockOpenApiValidatorTest {
         new OpenApiSpecParser()
             .parse(
                 new String(
-                    getClass()
-                        .getResourceAsStream("/openapi-30-component-ref.yaml")
-                        .readAllBytes(),
+                    getClass().getResourceAsStream("/openapi-30-component-ref.yaml").readAllBytes(),
                     StandardCharsets.UTF_8));
     DefaultMockOpenApiValidator v = new DefaultMockOpenApiValidator(newFixedCache(api), mapper);
     JsonNode body = mapper.readTree("{\"id\":\"cart-1\"}");

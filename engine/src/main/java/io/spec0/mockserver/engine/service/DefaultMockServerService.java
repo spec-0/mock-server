@@ -1,6 +1,5 @@
 package io.spec0.mockserver.engine.service;
 
-import io.spec0.mockserver.mockgen.MockingClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +10,7 @@ import io.spec0.mockserver.engine.dto.VariantCreateDto;
 import io.spec0.mockserver.engine.model.*;
 import io.spec0.mockserver.engine.spi.ApiSpecLookup;
 import io.spec0.mockserver.engine.spi.MockServerPersistencePort;
+import io.spec0.mockserver.mockgen.MockingClient;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.parser.OpenAPIV3Parser;
@@ -34,7 +34,8 @@ public class DefaultMockServerService implements MockServerServicePort {
   private final ApiSpecLookup apiSpecLookup;
   private final ObjectMapper objectMapper;
 
-  public DefaultMockServerService(MockServerPersistencePort persistence, ApiSpecLookup apiSpecLookup) {
+  public DefaultMockServerService(
+      MockServerPersistencePort persistence, ApiSpecLookup apiSpecLookup) {
     this(persistence, apiSpecLookup, new ObjectMapper());
   }
 
@@ -50,7 +51,10 @@ public class DefaultMockServerService implements MockServerServicePort {
   }
 
   private MockServer createMockServerInternal(
-      UUID specId, String name, MockResponseStrategy strategy, List<VariantCreateDto> importedVariants) {
+      UUID specId,
+      String name,
+      MockResponseStrategy strategy,
+      List<VariantCreateDto> importedVariants) {
     ApiSpecSnapshot spec =
         apiSpecLookup
             .findSpecById(specId)
@@ -63,7 +67,8 @@ public class DefaultMockServerService implements MockServerServicePort {
 
     List<MockServerOperation> ops = persistence.findOperationsBySpecId(specId);
     for (MockServerOperation op : ops) {
-      persistence.saveOperationConfig(new MockOperationConfig(saved.getMockServerId(), op.getOperationId()));
+      persistence.saveOperationConfig(
+          new MockOperationConfig(saved.getMockServerId(), op.getOperationId()));
     }
 
     if (importedVariants != null && !importedVariants.isEmpty()) {
@@ -174,7 +179,8 @@ public class DefaultMockServerService implements MockServerServicePort {
                 () -> new EngineNotFoundException("Mock server config not found: " + mockServerId));
 
     long total = persistence.countVariantsByMockServerId(mockServerId);
-    long perOp = persistence.countVariantsByMockServerIdAndOperationId(mockServerId, dto.getOperationId());
+    long perOp =
+        persistence.countVariantsByMockServerIdAndOperationId(mockServerId, dto.getOperationId());
 
     if (total >= config.getMaxTotalVariants()) {
       throw new IllegalArgumentException("Maximum total variants limit reached");
@@ -187,7 +193,8 @@ public class DefaultMockServerService implements MockServerServicePort {
   }
 
   @Override
-  public MockResponseVariant updateVariant(UUID mockServerId, UUID variantId, VariantCreateDto dto) {
+  public MockResponseVariant updateVariant(
+      UUID mockServerId, UUID variantId, VariantCreateDto dto) {
     MockResponseVariant variant =
         persistence
             .findVariantById(variantId)
@@ -237,12 +244,14 @@ public class DefaultMockServerService implements MockServerServicePort {
     MockServer server =
         persistence
             .findMockServerById(mockServerId)
-            .orElseThrow(() -> new EngineNotFoundException("Mock server not found: " + mockServerId));
+            .orElseThrow(
+                () -> new EngineNotFoundException("Mock server not found: " + mockServerId));
 
     ApiSpecSnapshot spec =
         apiSpecLookup
             .findSpecById(server.getSpecId())
-            .orElseThrow(() -> new EngineNotFoundException("Spec not found: " + server.getSpecId()));
+            .orElseThrow(
+                () -> new EngineNotFoundException("Spec not found: " + server.getSpecId()));
 
     List<MockResponseVariant> variants =
         persistence.findVariantsByMockServerIdOrderByDisplayOrder(mockServerId);
@@ -331,7 +340,8 @@ public class DefaultMockServerService implements MockServerServicePort {
     MockServer server =
         persistence
             .findMockServerById(mockServerId)
-            .orElseThrow(() -> new EngineNotFoundException("Mock server not found: " + mockServerId));
+            .orElseThrow(
+                () -> new EngineNotFoundException("Mock server not found: " + mockServerId));
     server.setName(newName);
     return persistence.saveMockServer(server);
   }
@@ -341,7 +351,8 @@ public class DefaultMockServerService implements MockServerServicePort {
     MockServer server =
         persistence
             .findMockServerById(mockServerId)
-            .orElseThrow(() -> new EngineNotFoundException("Mock server not found: " + mockServerId));
+            .orElseThrow(
+                () -> new EngineNotFoundException("Mock server not found: " + mockServerId));
     server.setIsEnabled(enabled);
     persistence.saveMockServer(server);
   }
@@ -351,7 +362,8 @@ public class DefaultMockServerService implements MockServerServicePort {
     MockServer server =
         persistence
             .findMockServerById(mockServerId)
-            .orElseThrow(() -> new EngineNotFoundException("Mock server not found: " + mockServerId));
+            .orElseThrow(
+                () -> new EngineNotFoundException("Mock server not found: " + mockServerId));
     server.setDefaultStrategy(strategy);
     return persistence.saveMockServer(server);
   }
@@ -368,7 +380,10 @@ public class DefaultMockServerService implements MockServerServicePort {
 
   @Override
   public MockOperationConfig updateOperationConfig(
-      UUID mockServerId, String operationId, Boolean enabled, MockResponseStrategy strategyOverride) {
+      UUID mockServerId,
+      String operationId,
+      Boolean enabled,
+      MockResponseStrategy strategyOverride) {
     MockOperationConfig config =
         persistence
             .findOperationConfigByMockServerIdAndOperationId(mockServerId, operationId)

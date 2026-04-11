@@ -6,7 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Per-operation configuration within a mock server (strategy override, enabled flag, round-robin state). */
+/**
+ * Per-operation configuration within a mock server (strategy override, enabled flag, round-robin
+ * state).
+ */
 @Entity
 @Table(
     name = "mock_operation_configs",
@@ -31,9 +34,7 @@ public class MockOperationConfigEntity {
   @Column(name = "is_enabled", nullable = false)
   private Boolean isEnabled = true;
 
-  /**
-   * When non-null, overrides the mock server's default strategy for this specific operation.
-   */
+  /** When non-null, overrides the mock server's default strategy for this specific operation. */
   @Enumerated(EnumType.STRING)
   @Column(name = "strategy_override", length = 30)
   private MockResponseStrategy strategyOverride;

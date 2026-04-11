@@ -15,9 +15,8 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
 /**
- * MCP tools for controlling spec0 mock servers from AI coding assistants
- * (Claude Code, Cursor, etc.). Component-scanned automatically by
- * StandaloneMockServerApplication.
+ * MCP tools for controlling spec0 mock servers from AI coding assistants (Claude Code, Cursor,
+ * etc.). Component-scanned automatically by StandaloneMockServerApplication.
  */
 @Service
 @RequiredArgsConstructor
@@ -44,7 +43,8 @@ public class MockServerMcpTools {
     var server =
         mockServerService
             .findById(UUID.fromString(mockServerId))
-            .orElseThrow(() -> new IllegalArgumentException("Mock server not found: " + mockServerId));
+            .orElseThrow(
+                () -> new IllegalArgumentException("Mock server not found: " + mockServerId));
     return toJson(operationRepository.findBySpecId(server.getSpecId()));
   }
 
@@ -53,7 +53,9 @@ public class MockServerMcpTools {
       description = "List response variants for a mock server, optionally filtered by operationId.")
   public String listVariants(
       @ToolParam(description = "UUID of the mock server") String mockServerId,
-      @ToolParam(description = "Filter by operationId (optional, pass null to list all)", required = false)
+      @ToolParam(
+              description = "Filter by operationId (optional, pass null to list all)",
+              required = false)
           String operationId) {
     UUID id = UUID.fromString(mockServerId);
     List<MockResponseVariantEntity> variants =
@@ -125,7 +127,8 @@ public class MockServerMcpTools {
       @ToolParam(description = "Display name for the variant") String name,
       @ToolParam(description = "Fallback HTTP status code if CEL eval fails, e.g. '200'")
           String statusCode,
-      @ToolParam(description = "CEL expression (see description for syntax)") String celExpression) {
+      @ToolParam(description = "CEL expression (see description for syntax)")
+          String celExpression) {
     VariantCreateDto dto = new VariantCreateDto();
     dto.setOperationId(operationId);
     dto.setResponseName(name);
@@ -150,7 +153,8 @@ public class MockServerMcpTools {
               + "Strategies: RANDOM, DEFAULT_ONLY, SEQUENTIAL, ROUND_ROBIN.")
   public String setStrategy(
       @ToolParam(description = "UUID of the mock server") String mockServerId,
-      @ToolParam(description = "RANDOM | DEFAULT_ONLY | SEQUENTIAL | ROUND_ROBIN") String strategy) {
+      @ToolParam(description = "RANDOM | DEFAULT_ONLY | SEQUENTIAL | ROUND_ROBIN")
+          String strategy) {
     MockResponseStrategy s = MockResponseStrategy.valueOf(strategy);
     return toJson(mockServerService.updateStrategy(UUID.fromString(mockServerId), s));
   }

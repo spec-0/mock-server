@@ -14,9 +14,9 @@ import org.springframework.web.servlet.resource.PathResourceResolver;
  * routes. Spring Boot's default resource handler serves exact file matches only, so a direct
  * browser access to {@code /ui/some-uuid} (detail page) or a hard refresh would return 404.
  *
- * <p>This config registers a custom {@link PathResourceResolver} for {@code /ui/**} that falls
- * back to {@code index.html} when no exact static file is found — the standard SPA pattern.
- * Actual static assets ({@code _next/static/…}, CSS, JS) are still served directly.
+ * <p>This config registers a custom {@link PathResourceResolver} for {@code /ui/**} that falls back
+ * to {@code index.html} when no exact static file is found — the standard SPA pattern. Actual
+ * static assets ({@code _next/static/…}, CSS, JS) are still served directly.
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {

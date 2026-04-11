@@ -8,7 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/** Handles all incoming mock API requests. Routes to the appropriate variant via the request handler. */
+/**
+ * Handles all incoming mock API requests. Routes to the appropriate variant via the request
+ * handler.
+ */
 @RestController
 @RequestMapping("/mock/{mockServerId}")
 @RequiredArgsConstructor
