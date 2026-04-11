@@ -84,7 +84,8 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
 
     if (importedVariants != null && !importedVariants.isEmpty()) {
       for (VariantCreateDto dto : importedVariants) {
-        persistVariant(saved.getMockServerId(), dto);
+        // Import path — validation warnings are not surfaced for bulk variant creation.
+        var unused = persistVariant(saved.getMockServerId(), dto);
       }
     } else {
       generateDefaultVariants(saved.getMockServerId(), spec.getSpecContent(), ops);

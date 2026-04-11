@@ -5,6 +5,6 @@ import java.util.List;
 
 public record VariantSaveResult(MockResponseVariantEntity entity, List<String> validationWarnings) {
   public VariantSaveResult {
-    validationWarnings = validationWarnings == null ? null : List.copyOf(validationWarnings);
+    validationWarnings = validationWarnings == null ? List.of() : List.copyOf(validationWarnings);
   }
 }
