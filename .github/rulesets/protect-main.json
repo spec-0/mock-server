@@ -8,6 +8,13 @@
       "exclude": []
     }
   },
+  "bypass_actors": [
+    {
+      "actor_id": 1,
+      "actor_type": "OrganizationAdmin",
+      "bypass_mode": "pull_request"
+    }
+  ],
   "rules": [
     {
       "type": "deletion"
