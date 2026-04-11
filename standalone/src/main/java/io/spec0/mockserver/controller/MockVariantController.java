@@ -37,7 +37,7 @@ public class MockVariantController {
     if (mockServerService.findById(mockServerId).isEmpty()) {
       return ResponseEntity.notFound().build();
     }
-    VariantSaveResult result = coreService.createVariantFull(mockServerId, dto);
+    VariantSaveResult result = mockServerService.createVariantFull(mockServerId, dto);
     return ResponseEntity.status(HttpStatus.CREATED).body(new VariantSaveResponse(result));
   }
 
@@ -49,7 +49,7 @@ public class MockVariantController {
     if (mockServerService.findById(mockServerId).isEmpty()) {
       return ResponseEntity.notFound().build();
     }
-    VariantSaveResult result = coreService.updateVariantFull(mockServerId, variantId, dto);
+    VariantSaveResult result = mockServerService.updateVariantFull(mockServerId, variantId, dto);
     return ResponseEntity.ok(new VariantSaveResponse(result));
   }
 

@@ -5,13 +5,14 @@ import io.spec0.mockserver.domain.MockResponseVariantEntity;
 import io.spec0.mockserver.domain.MockServerEntity;
 import io.spec0.mockserver.dto.MockServerExportDto;
 import io.spec0.mockserver.dto.VariantCreateDto;
+import io.spec0.mockserver.dto.VariantSaveResult;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Integration contract for mock server lifecycle and variant management. Platform backends
- * (SaaS, standalone) autowire this interface — never access repositories directly.
+ * Integration contract for mock server lifecycle and variant management. Platform backends (SaaS,
+ * standalone) autowire this interface — never access repositories directly.
  */
 public interface MockServerServicePort {
 
@@ -42,6 +43,10 @@ public interface MockServerServicePort {
   MockResponseVariantEntity createVariant(UUID mockServerId, VariantCreateDto dto);
 
   MockResponseVariantEntity updateVariant(UUID mockServerId, UUID variantId, VariantCreateDto dto);
+
+  VariantSaveResult createVariantFull(UUID mockServerId, VariantCreateDto dto);
+
+  VariantSaveResult updateVariantFull(UUID mockServerId, UUID variantId, VariantCreateDto dto);
 
   void deleteVariant(UUID mockServerId, UUID variantId);
 
