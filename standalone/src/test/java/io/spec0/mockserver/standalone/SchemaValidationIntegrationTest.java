@@ -2,6 +2,7 @@ package io.spec0.mockserver.standalone;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -99,7 +100,12 @@ class SchemaValidationIntegrationTest {
         rest.postForEntity(
             "/mock-server/servers",
             new HttpEntity<>(
-                Map.of("specId", specId, "name", "validation-test-server", "defaultStrategy",
+                Map.of(
+                    "specId",
+                    specId,
+                    "name",
+                    "validation-test-server",
+                    "defaultStrategy",
                     "RANDOM"),
                 json()),
             Map.class);
@@ -207,6 +213,33 @@ class SchemaValidationIntegrationTest {
     assertThat(resp.getStatusCode())
         .as("WARN mode with invalid body must still save (201 Created) — warning is logged only")
         .isEqualTo(HttpStatus.CREATED);
+  }
+
+  @Test
+  void warn_invalidBody_responseContainsWarnings() {
+    enableValidation("WARN");
+
+    ResponseEntity<Map> resp =
+        rest.postForEntity(
+            "/mock-server/servers/" + mockServerId + "/variants",
+            new HttpEntity<>(
+                Map.of(
+                    "operationId", "createItem",
+                    "responseName", "warn-warns",
+                    "statusCode", "201",
+                    "responseBody", "{\"wrong\":1}",
+                    "isDefault", false,
+                    "displayOrder", 5),
+                json()),
+            Map.class);
+
+    assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    assertThat(resp.getBody())
+        .as("WARN mode with schema violations must include 'validationWarnings' in response")
+        .containsKey("validationWarnings");
+    @SuppressWarnings("unchecked")
+    List<String> warnings = (List<String>) resp.getBody().get("validationWarnings");
+    assertThat(warnings).isNotEmpty();
   }
 
   // ── OFF mode ───────────────────────────────────────────────────────────────
