@@ -9,16 +9,20 @@ The mock server can validate variant response bodies against your OpenAPI spec b
 | Mode | Behavior |
 |------|----------|
 | `OFF` *(default)* | No validation. Any JSON body is accepted. |
-| `WARN` | The variant is saved. Violations are logged and returned in the `validationWarnings` field of the API response. |
+| `WARN` | The variant is saved. Violations are returned in `validationWarnings` and logged server-side. |
 | `STRICT` | The variant is **rejected** with `400 Bad Request` if the body violates the response schema. |
+
+> [!NOTE]
+> The default mode is `OFF` so that existing setups are not affected when you first enable the feature. Switch to `WARN` to get visibility into violations without blocking saves, or `STRICT` to enforce correctness.
 
 ---
 
 ## Setting the mode
 
-**From the UI:** Go to **Configuration** tab → **Schema Validation** → select a mode.
+**From the UI:** Go to the **Configuration** tab → **Schema Validation** → select a mode.
 
 **From the API:**
+
 ```bash
 curl -X PATCH http://localhost:8080/mock-server/servers/{mockServerId}/config \
   -H 'Content-Type: application/json' \
@@ -46,20 +50,25 @@ When a variant is saved in `WARN` mode and the body has violations, the `201 Cre
 }
 ```
 
-`validationWarnings` is absent when there are no violations.
+`validationWarnings` is omitted entirely when there are no violations.
 
 ---
 
 ## What gets validated
 
-- **Static variant bodies** are validated against the OpenAPI response schema for the declared status code at **save time** (when you call `POST` or `PUT` on a variant).
-- **CEL variants** are not validated at save time — their output is dynamic and only known at request time.
-- **Incoming request bodies** are validated against the OpenAPI request schema at **request time** (when a mock request arrives), according to the same mode setting.
+| What | When |
+|------|------|
+| **Static variant bodies** | At **save time** — validated against the OpenAPI response schema for the declared status code |
+| **CEL variant bodies** | Not validated at save time (output is only known at request time) |
+| **Incoming request bodies** | At **request time** — validated against the OpenAPI request schema, per the same mode setting |
+
+> [!NOTE]
+> Changing the mode does not retroactively re-validate existing variants — it only applies to new saves and incoming requests going forward.
 
 ---
 
-## Notes
+## See also
 
-- The default mode is `OFF` to avoid breaking existing setups when you first enable validation.
-- Changing the mode does not retroactively validate existing variants — it only applies to new saves and incoming requests.
-- Schema validation uses JSON Schema draft-07 semantics as interpreted by your OpenAPI spec version (3.0 or 3.1).
+- [Variants & Response Strategies](./variants-and-strategies.md) — creating and managing variants
+- [CEL Expressions](./cel-expressions.md) — dynamic variants and their relationship to validation
+- [← Documentation index](./README.md)

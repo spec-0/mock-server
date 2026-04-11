@@ -35,6 +35,8 @@ docker compose up -d
 - **[Drop-in base URL](docs/using-the-mock-url.md)** — point your app at `/mock/{serverId}` and all requests are intercepted; copy curl commands directly from the UI
 - **Web UI** — bundled at `/ui/`, no separate frontend deployment
 
+→ **[Full documentation](docs/README.md)**
+
 ---
 
 ## Schema validation modes

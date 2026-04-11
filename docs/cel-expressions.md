@@ -1,7 +1,5 @@
 # CEL Expressions
 
-## Overview
-
 **CEL (Common Expression Language)** lets you write dynamic response logic that is evaluated at request time rather than saved as a static body. With CEL you can:
 
 - Return different responses based on path parameters, query parameters, or headers
@@ -9,6 +7,15 @@
 - Simulate conditional logic (e.g., return `404` for unknown IDs)
 
 CEL is sandboxed and Turing-incomplete, making it safe to execute on the server.
+
+## Contents
+
+- [Creating a CEL variant](#creating-a-cel-variant)
+- [Expression context](#expression-context)
+- [Built-in functions](#built-in-functions)
+- [Return value](#return-value)
+- [Examples](#examples)
+- [Common mistakes](#common-mistakes)
 
 ---
 
@@ -23,6 +30,8 @@ CEL is sandboxed and Turing-incomplete, making it safe to execute on the server.
 
 ### From the API
 
+Set `celExpression` instead of (or in addition to) `responseBody`:
+
 ```bash
 curl -X POST http://localhost:8080/mock-server/servers/{mockServerId}/variants \
   -H 'Content-Type: application/json' \
@@ -30,7 +39,7 @@ curl -X POST http://localhost:8080/mock-server/servers/{mockServerId}/variants \
     "operationId": "getUser",
     "responseName": "Dynamic",
     "statusCode": "200",
-    "celExpression": "request.path_params.id == \"99\" ? {'\''status'\'': 404, '\''body'\'': {'\''error'\'': '\''not found'\''}} : {'\''status'\'': 200, '\''body'\'': {'\''id'\'': request.path_params.id, '\''name'\'': '\''Alice'\''}}"
+    "celExpression": "request.path_params.id == '\''99'\'' ? {'\''status'\'': 404, '\''body'\'': {'\''error'\'': '\''not found'\''}} : {'\''status'\'': 200, '\''body'\'': {'\''id'\'': request.path_params.id}}"
   }'
 ```
 
@@ -42,30 +51,30 @@ Every CEL expression receives a `request` object and an `env` map.
 
 ### `request` fields
 
-| Variable | Type | Description |
-|----------|------|-------------|
-| `request.method` | `string` | HTTP method — `"GET"`, `"POST"`, etc. |
-| `request.path` | `string` | Full request path — `"/users/123"` |
-| `request.path_params` | `map<string, string>` | Named path parameters — `request.path_params.id` |
-| `request.query_params` | `map<string, string>` | Query string parameters — `request.query_params.filter` |
-| `request.headers` | `map<string, string>` | Request headers (keys lowercased) — `request.headers["x-session-id"]` |
-| `request.body` | `map` or `null` | Parsed request body (JSON objects), or `null` for bodyless requests |
+| Variable | Type | Description | Example |
+|----------|------|-------------|---------|
+| `request.method` | `string` | HTTP method | `"GET"`, `"POST"` |
+| `request.path` | `string` | Full request path | `"/users/123"` |
+| `request.path_params` | `map<string, string>` | Named path parameters | `request.path_params.id` |
+| `request.query_params` | `map<string, string>` | Query string parameters | `request.query_params.filter` |
+| `request.headers` | `map<string, string>` | Request headers (keys lowercased) | `request.headers["x-session-id"]` |
+| `request.body` | `map` or `null` | Parsed JSON request body | `request.body.name` |
 
 ### `env` variables
 
-Per-server environment variables are accessible as `env.<KEY>`. Set them in the **Settings** tab of your mock server.
+Per-server environment variables are accessible as `env.<KEY>`. Define them in **Settings → Environment Variables**.
 
 ```
-env.BASE_URL        // a value you defined in Settings → Environment Variables
-env.API_VERSION
+env.REGION          // e.g. "us-east-1"
+env.API_VERSION     // e.g. "v2"
 ```
 
 ---
 
 ## Built-in functions
 
-| Function | Returns | Example |
-|----------|---------|---------|
+| Function | Returns | Description |
+|----------|---------|-------------|
 | `uuid()` | `string` | A random UUID v4 |
 | `now()` | `string` | Current timestamp as ISO 8601 |
 | `randomInt(min, max)` | `int` | Random integer in `[min, max)` |
@@ -74,23 +83,22 @@ env.API_VERSION
 
 ## Return value
 
-Your expression **must return a map** with the following shape:
+> [!IMPORTANT]
+> Your expression must return a **map with single-quoted string keys**. Unquoted identifiers are treated as variable references and will fail if the variable is not defined.
 
 ```
 {
-  'status': <int>,           // required — HTTP status code
-  'body':   <any>,           // optional — response body
-  'headers': <map<string,string>>  // optional — extra response headers
+  'status':  <int>,                  // required — HTTP status code
+  'body':    <any>,                  // optional — response body
+  'headers': <map<string, string>>   // optional — extra response headers
 }
 ```
-
-Map **keys must be single-quoted strings**. Unquoted identifiers are treated as variable references and will cause an error if the variable is not defined.
 
 ---
 
 ## Examples
 
-### Return a different body based on a path parameter
+### Branch on a path parameter
 
 ```cel
 request.path_params.id == "99"
@@ -98,7 +106,7 @@ request.path_params.id == "99"
   : {'status': 200, 'body': {'id': request.path_params.id, 'name': 'Alice'}}
 ```
 
-### Include a generated ID and timestamp in every response
+### Generated ID and timestamp on every response
 
 ```cel
 {
@@ -128,7 +136,7 @@ request.query_params.status == "inactive"
 }
 ```
 
-### Add a custom response header
+### Add custom response headers
 
 ```cel
 {
@@ -149,19 +157,27 @@ request.query_params.status == "inactive"
 
 ---
 
-## Tips and common mistakes
+## Common mistakes
 
-**Use single-quoted string keys.** Map keys must be single-quoted strings (`'status'`). Writing `{status: 200}` will fail because `status` is treated as a variable reference.
+> [!WARNING]
+> **`request.body` is `null` for GET requests and other bodyless methods.** Guard against it before accessing fields:
+> ```cel
+> request.body != null ? request.body.userId : 'anonymous'
+> ```
 
-**`request.body` is `null` for GET requests.** Guard against it:
-```cel
-request.body != null ? request.body.userId : 'anonymous'
-```
+> [!WARNING]
+> **Path parameters are always strings.** Compare with string literals, not integers:
+> ```cel
+> request.path_params.id == "42"   // correct
+> request.path_params.id == 42     // wrong — type mismatch, will always be false
+> ```
 
-**Path parameters are always strings.** Compare with string literals:
-```cel
-request.path_params.id == "42"   // correct
-request.path_params.id == 42     // wrong — type mismatch
-```
+> [!NOTE]
+> **CEL variants bypass response-body schema validation at save time.** Validation only applies to static variants. The body returned by a CEL expression is not checked against the OpenAPI schema.
 
-**CEL variants bypass response-body schema validation at save time** (validation only applies to static variants). The returned body is not validated against the OpenAPI schema.
+---
+
+## See also
+
+- [Variants & Response Strategies](./variants-and-strategies.md) — where CEL variants fit into the overall variant model
+- [← Documentation index](./README.md)

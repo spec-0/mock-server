@@ -56,16 +56,25 @@ Every mock response includes these headers, which also appear in the log:
 | `X-spec0-Mock-Variant-Id` | UUID of the selected variant |
 | `X-spec0-Mock-Operation-Id` | Resolved `operationId` |
 
-These headers make it straightforward to trace which variant was served for a given request.
+> [!TIP]
+> Use `X-spec0-Mock-Variant-Id` in your test assertions to verify that the expected variant was served for a given request.
 
 ---
 
 ## Log retention
 
-The number of log entries retained per mock server is controlled by the `maxLogEntries` configuration field. Once the limit is reached, older entries are dropped. Configure it via:
+The number of log entries retained per mock server is controlled by the `maxLogEntries` configuration field. Once the limit is reached, older entries are dropped.
 
 ```bash
 curl -X PATCH http://localhost:8080/mock-server/servers/{mockServerId}/config \
   -H 'Content-Type: application/json' \
   -d '{"maxLogEntries": 500}'
 ```
+
+---
+
+## See also
+
+- [Variants & Response Strategies](./variants-and-strategies.md) — understand the `variantId` field in each log entry
+- [Using the mock URL](./using-the-mock-url.md) — how requests reach the mock server
+- [← Documentation index](./README.md)
