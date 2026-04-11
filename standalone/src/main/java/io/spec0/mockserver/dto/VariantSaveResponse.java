@@ -1,5 +1,6 @@
 package io.spec0.mockserver.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.spec0.mockserver.domain.MockResponseVariantEntity;
@@ -18,6 +19,7 @@ public class VariantSaveResponse {
     this.validationWarnings = (w != null && !w.isEmpty()) ? w : null;
   }
 
+  @JsonIgnore
   public MockResponseVariantEntity getVariant() {
     return variant;
   }
