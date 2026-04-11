@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.spec0.mockserver.domain.*;
 import io.spec0.mockserver.dto.MockServerExportDto;
 import io.spec0.mockserver.dto.VariantCreateDto;
+import io.spec0.mockserver.dto.VariantSaveResult;
 import io.spec0.mockserver.error.MockApiException;
 import io.spec0.mockserver.mockgen.MockingClient;
 import io.spec0.mockserver.openapi.validation.MockOpenApiValidator;
@@ -19,16 +20,15 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @Transactional
@@ -62,7 +62,10 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
   }
 
   private MockServerEntity createMockServerInternal(
-      UUID specId, String name, MockResponseStrategy strategy, List<VariantCreateDto> importedVariants) {
+      UUID specId,
+      String name,
+      MockResponseStrategy strategy,
+      List<VariantCreateDto> importedVariants) {
     ApiSpecEntity spec =
         apiSpecServicePort
             .findById(specId)
@@ -187,6 +190,10 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
 
   @Override
   public MockResponseVariantEntity createVariant(UUID mockServerId, VariantCreateDto dto) {
+    return createVariantFull(mockServerId, dto).entity();
+  }
+
+  public VariantSaveResult createVariantFull(UUID mockServerId, VariantCreateDto dto) {
     MockServerConfigEntity config =
         configRepository
             .findByMockServerId(mockServerId)
@@ -194,7 +201,8 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
                 () -> new EntityNotFoundException("Mock server config not found: " + mockServerId));
 
     long total = variantRepository.countByMockServerId(mockServerId);
-    long perOp = variantRepository.countByMockServerIdAndOperationId(mockServerId, dto.getOperationId());
+    long perOp =
+        variantRepository.countByMockServerIdAndOperationId(mockServerId, dto.getOperationId());
 
     if (total >= config.getMaxTotalVariants()) {
       throw new IllegalArgumentException("Maximum total variants limit reached");
@@ -209,6 +217,11 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
   @Override
   public MockResponseVariantEntity updateVariant(
       UUID mockServerId, UUID variantId, VariantCreateDto dto) {
+    return updateVariantFull(mockServerId, variantId, dto).entity();
+  }
+
+  public VariantSaveResult updateVariantFull(
+      UUID mockServerId, UUID variantId, VariantCreateDto dto) {
     MockResponseVariantEntity variant =
         variantRepository
             .findById(variantId)
@@ -220,7 +233,8 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
 
     if (dto.isDefault() && !Boolean.TRUE.equals(variant.getIsDefault())) {
       variantRepository
-          .findFirstByMockServerIdAndOperationIdAndIsDefaultTrue(mockServerId, variant.getOperationId())
+          .findFirstByMockServerIdAndOperationIdAndIsDefaultTrue(
+              mockServerId, variant.getOperationId())
           .ifPresent(
               existing -> {
                 existing.setIsDefault(false);
@@ -241,9 +255,10 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
     MockServerEntity srv =
         serverRepository
             .findById(mockServerId)
-            .orElseThrow(() -> new EntityNotFoundException("Mock server not found: " + mockServerId));
-    validateStaticVariantResponse(mockServerId, srv.getSpecId(), dto);
-    return variantRepository.save(variant);
+            .orElseThrow(
+                () -> new EntityNotFoundException("Mock server not found: " + mockServerId));
+    List<String> warnings = validateStaticVariantResponse(mockServerId, srv.getSpecId(), dto);
+    return new VariantSaveResult(variantRepository.save(variant), warnings);
   }
 
   @Override
@@ -266,12 +281,14 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
     MockServerEntity server =
         serverRepository
             .findById(mockServerId)
-            .orElseThrow(() -> new EntityNotFoundException("Mock server not found: " + mockServerId));
+            .orElseThrow(
+                () -> new EntityNotFoundException("Mock server not found: " + mockServerId));
 
     ApiSpecEntity spec =
         apiSpecServicePort
             .findById(server.getSpecId())
-            .orElseThrow(() -> new EntityNotFoundException("Spec not found: " + server.getSpecId()));
+            .orElseThrow(
+                () -> new EntityNotFoundException("Spec not found: " + server.getSpecId()));
 
     List<MockResponseVariantEntity> variants =
         variantRepository.findByMockServerIdOrderByDisplayOrder(mockServerId);
@@ -287,8 +304,7 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
                         v.getResponseBody(),
                         v.getHeaders(),
                         Boolean.TRUE.equals(v.getIsDefault()),
-                        v.getDisplayOrder())
-                )
+                        v.getDisplayOrder()))
             .toList();
 
     return new MockServerExportDto(
@@ -301,7 +317,7 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
-  private MockResponseVariantEntity persistVariant(UUID mockServerId, VariantCreateDto dto) {
+  private VariantSaveResult persistVariant(UUID mockServerId, VariantCreateDto dto) {
     if (dto.isDefault()) {
       variantRepository
           .findFirstByMockServerIdAndOperationIdAndIsDefaultTrue(mockServerId, dto.getOperationId())
@@ -326,12 +342,13 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
     MockServerEntity srv =
         serverRepository
             .findById(mockServerId)
-            .orElseThrow(() -> new EntityNotFoundException("Mock server not found: " + mockServerId));
-    validateStaticVariantResponse(mockServerId, srv.getSpecId(), dto);
-    return variantRepository.save(v);
+            .orElseThrow(
+                () -> new EntityNotFoundException("Mock server not found: " + mockServerId));
+    List<String> warnings = validateStaticVariantResponse(mockServerId, srv.getSpecId(), dto);
+    return new VariantSaveResult(variantRepository.save(v), warnings);
   }
 
-  private void validateStaticVariantResponse(
+  private List<String> validateStaticVariantResponse(
       UUID mockServerId, UUID specId, VariantCreateDto dto) {
     MockServerConfigEntity cfg = configRepository.findByMockServerId(mockServerId).orElse(null);
     if (cfg == null || cfg.getSchemaValidationMode() == SchemaValidationMode.OFF) {
@@ -339,14 +356,14 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
           "staticVariantValidation skipped: no_config_or_off mockServerId={} operationId={}",
           mockServerId,
           dto.getOperationId());
-      return;
+      return List.of();
     }
     if (dto.getCelExpression() != null && !dto.getCelExpression().isBlank()) {
       log.trace(
           "staticVariantValidation skipped: cel_variant mockServerId={} operationId={}",
           mockServerId,
           dto.getOperationId());
-      return;
+      return List.of();
     }
     log.trace(
         "staticVariantValidation start mockServerId={} specId={} operationId={} statusCode={} mode={} responseBodyChars={}",
@@ -377,15 +394,14 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
             "invalid_json",
             String.format(
                 "Response body must be valid JSON when schema validation is STRICT (operation \"%s\", HTTP status %s).",
-                dto.getOperationId(),
-                dto.getStatusCode()),
+                dto.getOperationId(), dto.getStatusCode()),
             detail);
       }
       log.warn(
           "Static variant response body is not valid JSON (WARN, operation {}): {}",
           dto.getOperationId(),
           e.getMessage());
-      return;
+      return List.of();
     }
     OpenApiValidationResult r =
         mockOpenApiValidator.validateResponseBody(
@@ -403,9 +419,7 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
             "response_validation_unavailable",
             String.format(
                 "Cannot validate this static variant under STRICT: operation \"%s\" / HTTP %s has no applicable application/json schema in the spec (%s). Fix the status code or OpenAPI response, or set validation to WARN/OFF.",
-                dto.getOperationId(),
-                dto.getStatusCode(),
-                why),
+                dto.getOperationId(), dto.getStatusCode(), why),
             List.of(why));
       }
       log.warn(
@@ -413,14 +427,14 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
           dto.getOperationId(),
           dto.getStatusCode(),
           why);
-      return;
+      return List.of();
     }
     if (r.valid()) {
       log.trace(
           "staticVariantValidation outcome=ok operationId={} statusCode={}",
           dto.getOperationId(),
           dto.getStatusCode());
-      return;
+      return List.of();
     }
     if (cfg.getSchemaValidationMode() == SchemaValidationMode.WARN) {
       log.trace(
@@ -429,7 +443,7 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
           dto.getOperationId(),
           r.errors());
       log.warn("Static variant response validation (WARN): {}", r.errors());
-      return;
+      return r.errors();
     }
     log.trace(
         "staticVariantValidation outcome=schema_mismatch_strict errorCount={} operationId={} errors={}",
@@ -440,8 +454,7 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
         "response_schema_validation_failed",
         String.format(
             "Mock response body does not match the OpenAPI JSON schema for operation \"%s\" and HTTP status %s (content type application/json).",
-            dto.getOperationId(),
-            dto.getStatusCode()),
+            dto.getOperationId(), dto.getStatusCode()),
         r.errors());
   }
 
@@ -490,7 +503,8 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
     MockServerEntity server =
         serverRepository
             .findById(mockServerId)
-            .orElseThrow(() -> new EntityNotFoundException("Mock server not found: " + mockServerId));
+            .orElseThrow(
+                () -> new EntityNotFoundException("Mock server not found: " + mockServerId));
     server.setName(newName);
     return serverRepository.save(server);
   }
@@ -500,7 +514,8 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
     MockServerEntity server =
         serverRepository
             .findById(mockServerId)
-            .orElseThrow(() -> new EntityNotFoundException("Mock server not found: " + mockServerId));
+            .orElseThrow(
+                () -> new EntityNotFoundException("Mock server not found: " + mockServerId));
     server.setIsEnabled(enabled);
     serverRepository.save(server);
   }
@@ -510,7 +525,8 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
     MockServerEntity server =
         serverRepository
             .findById(mockServerId)
-            .orElseThrow(() -> new EntityNotFoundException("Mock server not found: " + mockServerId));
+            .orElseThrow(
+                () -> new EntityNotFoundException("Mock server not found: " + mockServerId));
     server.setDefaultStrategy(strategy);
     return serverRepository.save(server);
   }
@@ -527,7 +543,10 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
 
   @Override
   public MockOperationConfigEntity updateOperationConfig(
-      UUID mockServerId, String operationId, Boolean enabled, MockResponseStrategy strategyOverride) {
+      UUID mockServerId,
+      String operationId,
+      Boolean enabled,
+      MockResponseStrategy strategyOverride) {
     MockOperationConfigEntity config =
         operationConfigRepository
             .findByMockServerIdAndOperationId(mockServerId, operationId)
