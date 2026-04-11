@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Sparkles } from 'lucide-react';
 import { MockResponseVariant } from '@/services/mockServerAdminClient';
 
 interface VariantEditDialogProps {
@@ -91,7 +93,7 @@ export default function VariantEditDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Edit Response Variant
-            <Badge variant="outline" className={variantTab === 'cel' ? 'text-purple-700 border-purple-300 bg-purple-50' : ''}>
+            <Badge aria-hidden="true" variant="outline" className={variantTab === 'cel' ? 'text-purple-700 border-purple-300 bg-purple-50' : ''}>
               {variantTab === 'cel' ? 'CEL' : 'Static'}
             </Badge>
           </DialogTitle>
@@ -110,12 +112,16 @@ export default function VariantEditDialog({
             </div>
             <div>
               <Label htmlFor="edit-statusCode">Status Code</Label>
-              <Input
-                id="edit-statusCode"
-                value={statusCode}
-                onChange={(e) => setStatusCode(e.target.value)}
-                required
-              />
+              <Select value={statusCode} onValueChange={setStatusCode} required>
+                <SelectTrigger id="edit-statusCode">
+                  <SelectValue placeholder="Select status code..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableStatusCodes.map((code) => (
+                    <SelectItem key={code} value={code}>{code}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -124,6 +130,8 @@ export default function VariantEditDialog({
             <Input
               id="edit-displayOrder"
               type="number"
+              min={0}
+              max={9999}
               value={displayOrder}
               onChange={(e) => setDisplayOrder(parseInt(e.target.value) || 1)}
             />
@@ -137,7 +145,25 @@ export default function VariantEditDialog({
 
             <TabsContent value="static" className="space-y-3 mt-3">
               <div>
-                <Label htmlFor="edit-responseBody">Response Body (JSON)</Label>
+                <div className="flex items-center justify-between mb-1">
+                  <Label htmlFor="edit-responseBody">Response Body (JSON)</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      try {
+                        setResponseBody(JSON.stringify(JSON.parse(responseBody), null, 2));
+                      } catch {
+                        // not valid JSON — leave as-is
+                      }
+                    }}
+                    className="h-7 text-xs"
+                  >
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    Beautify
+                  </Button>
+                </div>
                 <Textarea
                   id="edit-responseBody"
                   value={responseBody}

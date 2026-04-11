@@ -186,7 +186,7 @@ export default function VariantDetailDialog({ variant, onClose, onEdit }: Varian
 
         <DialogFooter className="px-6 py-4 border-t shrink-0 gap-2 sm:gap-0">
           <Button type="button" variant="outline" onClick={onClose}>
-            Close
+            Done
           </Button>
           {variant && (
             <Button
