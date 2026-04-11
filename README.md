@@ -27,11 +27,15 @@ docker compose up -d
 ## Features
 
 - **Auto-generated responses** from your OpenAPI spec — no setup beyond uploading the spec
-- **Variant management** — define multiple named responses per operation and switch between them
-- **Schema validation** (`OFF` / `WARN` / `STRICT`) — validate variant bodies against the OpenAPI response schema before saving
-- **CEL expressions** — dynamic responses evaluated at request time
-- **Request logging** — inspect recent requests per mock server
+- **[Variant management](docs/variants-and-strategies.md)** — define multiple named responses per operation with `RANDOM`, `SEQUENTIAL`, `ROUND_ROBIN`, or `DEFAULT_ONLY` strategies
+- **[Schema validation](docs/schema-validation.md)** (`OFF` / `WARN` / `STRICT`) — validate variant bodies against the OpenAPI response schema before saving
+- **[CEL expressions](docs/cel-expressions.md)** — dynamic responses evaluated at request time using request path params, query params, headers, and body
+- **[Request logging](docs/request-logs.md)** — inspect full request/response pairs per mock server with infinite-scroll log viewer
+- **[MCP integration](docs/mcp-integration.md)** — manage mock servers from Claude, Cursor, or any MCP-compatible AI assistant
+- **[Drop-in base URL](docs/using-the-mock-url.md)** — point your app at `/mock/{serverId}` and all requests are intercepted; copy curl commands directly from the UI
 - **Web UI** — bundled at `/ui/`, no separate frontend deployment
+
+→ **[Full documentation](docs/README.md)**
 
 ---
 
