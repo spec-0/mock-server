@@ -1,0 +1,12 @@
+# Slim context for runtime-only Dockerfile (only the exec JAR is COPY'd).
+# Do not blanket-ignore **/target — the image needs standalone/target/*-exec.jar.
+
+engine/target
+standalone/target/**
+!standalone/target/mock-server-standalone-*-exec.jar
+
+**/node_modules
+**/.next
+**/out
+**/.idea
+**/.git

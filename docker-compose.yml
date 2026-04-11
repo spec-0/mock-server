@@ -1,0 +1,19 @@
+# API + bundled UI on port 8080 — http://localhost:8080/ui/
+# Usage (from apps/mock-server): docker compose up -d
+#
+# Override Spring via environment, e.g.:
+#   environment:
+#     SERVER_PORT: "8080"
+#     SPRING_DATASOURCE_URL: "jdbc:h2:file:/data/spec0-mock;DB_CLOSE_ON_EXIT=FALSE"
+services:
+  mock-server:
+    build: .
+    image: spec0/mock-server:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - mock-server-data:/data
+    restart: unless-stopped
+
+volumes:
+  mock-server-data:

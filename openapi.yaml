@@ -1,0 +1,633 @@
+openapi: 3.0.3
+info:
+  title: spec0 Mock Server API
+  description: >
+    REST API for the open-source spec0 mock server.
+    Register an OpenAPI spec, create a mock server, and start receiving
+    auto-generated mock responses immediately.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local standalone instance
+
+tags:
+  - name: specs
+    description: OpenAPI spec registration
+  - name: servers
+    description: Mock server management
+  - name: variants
+    description: Response variant management
+  - name: logs
+    description: Request log access
+  - name: operations
+    description: Per-operation configuration
+  - name: mock
+    description: Mock traffic (proxy path)
+
+paths:
+
+  # ── Specs ──────────────────────────────────────────────────────────────────
+
+  /mock-server/specs:
+    post:
+      tags: [specs]
+      operationId: registerSpec
+      summary: Register an OpenAPI spec
+      description: >
+        Registers a YAML or JSON OpenAPI spec. Re-posting the same
+        specName + content is idempotent — returns the existing specId.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterSpecRequest'
+      responses:
+        '201':
+          description: Spec registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSpec'
+
+  /mock-server/specs/{specId}:
+    get:
+      tags: [specs]
+      operationId: getSpec
+      summary: Get a registered spec
+      parameters:
+        - $ref: '#/components/parameters/specId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSpec'
+        '404':
+          description: Not found
+
+  # ── Servers ────────────────────────────────────────────────────────────────
+
+  /mock-server/servers:
+    get:
+      tags: [servers]
+      operationId: listMockServers
+      summary: List all mock servers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MockServer'
+    post:
+      tags: [servers]
+      operationId: createMockServer
+      summary: Create a mock server
+      description: >
+        Creates a mock server for a previously registered spec.
+        Auto-generates default response variants for every operation in the spec.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMockServerRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MockServer'
+
+  /mock-server/servers/{mockServerId}:
+    get:
+      tags: [servers]
+      operationId: getMockServer
+      summary: Get a mock server
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MockServer'
+        '404':
+          description: Not found
+    patch:
+      tags: [servers]
+      operationId: patchMockServer
+      summary: Update a mock server
+      description: Rename, enable/disable, or change the default response strategy.
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchMockServerRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MockServer'
+        '404':
+          description: Not found
+    delete:
+      tags: [servers]
+      operationId: deleteMockServer
+      summary: Delete a mock server
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+
+  /mock-server/servers/{mockServerId}/export:
+    get:
+      tags: [servers]
+      operationId: exportMockServer
+      summary: Export a mock server
+      description: >
+        Returns the spec, server config, and all variants as a single
+        portable JSON document.
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+      responses:
+        '200':
+          description: Export document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MockServerExport'
+
+  # ── Variants ───────────────────────────────────────────────────────────────
+
+  /mock-server/servers/{mockServerId}/variants:
+    get:
+      tags: [variants]
+      operationId: listVariants
+      summary: List response variants
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+        - name: operationId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter variants by operationId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MockResponseVariant'
+    post:
+      tags: [variants]
+      operationId: createVariant
+      summary: Create a response variant
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariantRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MockResponseVariant'
+
+  /mock-server/servers/{mockServerId}/variants/{variantId}:
+    put:
+      tags: [variants]
+      operationId: updateVariant
+      summary: Update a response variant
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+        - $ref: '#/components/parameters/variantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VariantRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MockResponseVariant'
+    delete:
+      tags: [variants]
+      operationId: deleteVariant
+      summary: Delete a response variant
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+        - $ref: '#/components/parameters/variantId'
+      responses:
+        '204':
+          description: Deleted
+
+  # ── Logs ───────────────────────────────────────────────────────────────────
+
+  /mock-server/servers/{mockServerId}/logs:
+    get:
+      tags: [logs]
+      operationId: getLogs
+      summary: Get recent request logs
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            maximum: 200
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MockRequestLog'
+
+  # ── Operations ─────────────────────────────────────────────────────────────
+
+  /mock-server/servers/{mockServerId}/spec-operations:
+    get:
+      tags: [operations]
+      operationId: listSpecOperations
+      summary: List parsed operations from the spec
+      description: >
+        Returns the operations parsed from the registered OpenAPI spec when the mock server was
+        created. Useful for the UI Endpoints tab — provides HTTP method, path, and operationId.
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SpecOperation'
+        '404':
+          description: Not found
+
+  /mock-server/servers/{mockServerId}/operations:
+    get:
+      tags: [operations]
+      operationId: listOperationConfigs
+      summary: List operation configs
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MockOperationConfig'
+
+  /mock-server/servers/{mockServerId}/operations/{operationId}:
+    patch:
+      tags: [operations]
+      operationId: patchOperationConfig
+      summary: Update an operation config
+      description: Enable/disable an operation or override its response strategy.
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+        - name: operationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchOperationConfigRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MockOperationConfig'
+
+  # ── Mock traffic ───────────────────────────────────────────────────────────
+
+  /mock/{mockServerId}/{path}:
+    get:
+      tags: [mock]
+      operationId: mockRequestGet
+      summary: Send a mock GET request
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-spec0-Preferred-Response-Code
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Force a specific HTTP status code to be returned
+        - name: X-Mock-Operation-Id
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Override which operationId is matched
+      responses:
+        '200':
+          description: Mock response (status code may vary per variant)
+          headers:
+            X-spec0-Mock-Response:
+              schema:
+                type: string
+                enum: ['true']
+            X-spec0-Mock-Operation-Id:
+              schema:
+                type: string
+            X-spec0-Mock-Variant-Id:
+              schema:
+                type: string
+
+components:
+
+  parameters:
+    mockServerId:
+      name: mockServerId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    specId:
+      name: specId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    variantId:
+      name: variantId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+
+    ResponseStrategy:
+      type: string
+      enum: [RANDOM, SEQUENTIAL, ROUND_ROBIN, DEFAULT_ONLY]
+      default: RANDOM
+
+    SpecOperation:
+      type: object
+      description: An operation parsed from the registered OpenAPI spec
+      properties:
+        operationId:
+          type: string
+        httpMethod:
+          type: string
+          example: GET
+        path:
+          type: string
+          example: /users/{id}
+        successStatusCode:
+          type: string
+          example: '200'
+        createdAt:
+          type: string
+          format: date-time
+
+    RegisterSpecRequest:
+      type: object
+      required: [specName, specContent]
+      properties:
+        specName:
+          type: string
+          example: petstore
+        specContent:
+          type: string
+          description: Raw YAML or JSON OpenAPI spec
+
+    ApiSpec:
+      type: object
+      properties:
+        specId:
+          type: string
+          format: uuid
+        specName:
+          type: string
+        specVersion:
+          type: string
+        specHash:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateMockServerRequest:
+      type: object
+      required: [specId, name]
+      properties:
+        specId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: petstore-mock
+        defaultStrategy:
+          $ref: '#/components/schemas/ResponseStrategy'
+
+    PatchMockServerRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        isEnabled:
+          type: boolean
+        defaultStrategy:
+          $ref: '#/components/schemas/ResponseStrategy'
+
+    MockServer:
+      type: object
+      properties:
+        mockServerId:
+          type: string
+          format: uuid
+        specId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        defaultStrategy:
+          $ref: '#/components/schemas/ResponseStrategy'
+        isEnabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VariantRequest:
+      type: object
+      required: [operationId, responseName, statusCode, responseBody]
+      properties:
+        operationId:
+          type: string
+        responseName:
+          type: string
+        statusCode:
+          type: string
+          example: '200'
+        responseBody:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        isDefault:
+          type: boolean
+          default: false
+        displayOrder:
+          type: integer
+          default: 0
+
+    MockResponseVariant:
+      allOf:
+        - $ref: '#/components/schemas/VariantRequest'
+        - type: object
+          properties:
+            variantId:
+              type: string
+              format: uuid
+            mockServerId:
+              type: string
+              format: uuid
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    MockRequestLog:
+      type: object
+      properties:
+        logId:
+          type: string
+          format: uuid
+        mockServerId:
+          type: string
+          format: uuid
+        operationId:
+          type: string
+        requestMethod:
+          type: string
+          example: GET
+        requestPath:
+          type: string
+        requestHeaders:
+          type: object
+          additionalProperties:
+            type: string
+        requestBody:
+          type: string
+        responseStatusCode:
+          type: string
+        responseBody:
+          type: string
+        variantId:
+          type: string
+          format: uuid
+        responseTimeMs:
+          type: integer
+        requestedAt:
+          type: string
+          format: date-time
+
+    MockOperationConfig:
+      type: object
+      properties:
+        configId:
+          type: string
+          format: uuid
+        mockServerId:
+          type: string
+          format: uuid
+        operationId:
+          type: string
+        isEnabled:
+          type: boolean
+        strategyOverride:
+          $ref: '#/components/schemas/ResponseStrategy'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PatchOperationConfigRequest:
+      type: object
+      properties:
+        isEnabled:
+          type: boolean
+        responseStrategy:
+          $ref: '#/components/schemas/ResponseStrategy'
+
+    MockServerExport:
+      type: object
+      properties:
+        version:
+          type: string
+          example: '1.0'
+        spec:
+          $ref: '#/components/schemas/ApiSpec'
+        mockServer:
+          $ref: '#/components/schemas/MockServer'
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/MockResponseVariant'

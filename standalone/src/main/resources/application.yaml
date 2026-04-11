@@ -1,0 +1,79 @@
+spring:
+  profiles.active: local
+  application:
+    name: spec0-mock-server
+
+  datasource:
+    # H2 file-based database — persists to /data volume mount (Docker: -v ~/.spec0/data:/data)
+    url: jdbc:h2:file:/data/spec0-mock;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: none    # Flyway manages the schema — never let Hibernate auto-create tables
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+    properties:
+      hibernate:
+        default_schema: mock_server
+
+  flyway:
+    enabled: false    # Disabled — MockServerAutoConfiguration declares its own named Flyway bean
+
+  # Disable H2 web console in production — enable only for local debugging
+  h2:
+    console:
+      enabled: false
+
+  ai:
+    mcp:
+      server:
+        name: spec0-mock-server
+        version: 1.0.0
+        type: sync
+        protocol: STREAMABLE
+        resource-change-notification: true
+        tool-change-notification: true
+        prompt-change-notification: true
+        streamable-http:
+          keep-alive-interval: 30s
+        annotation-scanner:
+          enabled: true
+
+server:
+  port: 8080
+
+mockserver:
+  openapi-cache:
+    ttl-minutes: 5
+    max-size: 500
+
+# CORS — allow all origins for local development
+mock-server:
+  security:
+    enabled: false    # No API key required in standalone mode
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    io.spec0: TRACE
+    # Verbose OpenAPI validation (TRACE is silent in prod while io.spec0 stays INFO):
+    # io.spec0.mockserver.openapi.validation: TRACE
+    # io.spec0.mockserver.service.MockServerCoreServiceImpl: TRACE
+    # io.spec0.mockserver.service.MockServerRequestHandler: TRACE
+    org.springframework: WARN
+    org.hibernate: WARN
+    org.flywaydb: INFO
+    org:
+      springframework:
+        ai: TRACE

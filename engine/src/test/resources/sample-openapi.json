@@ -1,0 +1,156 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Sample API",
+    "version": "1.0.0",
+    "description": "A sample API to demonstrate OpenAPI mock response generation."
+  },
+  "paths": {
+    "/users": {
+      "get": {
+        "summary": "Get list of users",
+        "operationId": "getUsers",
+        "responses": {
+          "200": {
+            "description": "Successful response with a list of users.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserList"
+                },
+                "examples": {
+                  "successResponse": {
+                    "value": {
+                      "users": [
+                        {
+                          "id": "123e4567-e89b-12d3-a456-426614174000",
+                          "name": "Alice Johnson",
+                          "email": "alice@example.com"
+                        },
+                        {
+                          "id": "987e6543-e21b-32c1-b456-123456789000",
+                          "name": "Bob Smith",
+                          "email": "bob@example.com"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid parameters provided.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalidParams": {
+                    "value": {
+                      "errorCode": 4001,
+                      "errorMessage": "Invalid query parameter 'page'. Must be a positive integer."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - No users found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "notFound": {
+                    "value": {
+                      "errorCode": 4041,
+                      "errorMessage": "No users found in the database."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "serverError": {
+                    "value": {
+                      "errorCode": 5001,
+                      "errorMessage": "Unexpected database error. Please try again later."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserList": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          }
+        },
+        "example": {
+          "users": [
+            {
+              "id": "123e4567-e89b-12d3-a456-426614174000",
+              "name": "Alice Johnson",
+              "email": "alice@example.com"
+            }
+          ]
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "example": "Alice Johnson"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "alice@example.com"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "integer",
+            "example": 4001
+          },
+          "errorMessage": {
+            "type": "string",
+            "example": "Invalid request parameters."
+          }
+        }
+      }
+    }
+  }
+}

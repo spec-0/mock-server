@@ -1,0 +1,11 @@
+# Maven
+**/target/
+
+# Next.js UI
+ui/node_modules/
+ui/.next/
+ui/out/
+
+# IDE
+.idea/
+docs/superpowers/

@@ -1,0 +1,40 @@
+spring:
+  ai:
+    mcp:
+      server:
+        name: spec0-mock-server
+        version: 1.0.0
+        type: sync
+        protocol: STREAMABLE
+        resource-change-notification: true
+        tool-change-notification: true
+        prompt-change-notification: true
+        annotation-scanner:
+          enabled: true
+  datasource:
+    url: jdbc:h2:mem:spec0-local;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+logging:
+  level:
+    io.spec0: INFO
+    org.springframework.web: DEBUG
+    org.hibernate: WARN
+    org.flywaydb: INFO
+    org:
+      springframework:
+        ai: TRACE
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, mappings, beans

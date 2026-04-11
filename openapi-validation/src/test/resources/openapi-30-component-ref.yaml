@@ -1,0 +1,24 @@
+openapi: 3.0.3
+info:
+  title: Component ref API
+  version: "1.0"
+paths:
+  /cart:
+    get:
+      operationId: getCart
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+components:
+  schemas:
+    Cart:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
