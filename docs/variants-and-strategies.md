@@ -1,0 +1,107 @@
+# Variants and Response Strategies
+
+## What is a variant?
+
+Every operation in your OpenAPI spec can have one or more **variants** — named, pre-configured responses that the mock server returns when that operation is called. Variants let you simulate different scenarios (happy path, error states, edge cases) without changing any configuration in your application.
+
+A variant has:
+
+| Field | Description |
+|-------|-------------|
+| **Name** | Human-readable label, e.g. `"Success"`, `"Not Found"`, `"Rate Limited"` |
+| **Status code** | HTTP status code returned, e.g. `200`, `404`, `429` |
+| **Response body** | JSON body returned in the response |
+| **Headers** | Optional extra response headers |
+| **Default flag** | Whether this is the default for the `DEFAULT_ONLY` strategy |
+| **CEL expression** | Optional dynamic expression evaluated at request time (see [CEL Expressions](./cel-expressions.md)) |
+
+---
+
+## Creating variants
+
+### From the UI
+
+1. Open a mock server and go to the **Endpoints** tab.
+2. Expand any operation.
+3. Click **Add Variant** and fill in the name, status code, and response body.
+4. For dynamic responses, switch to the **CEL** tab instead of **Static**.
+5. Save. The variant is immediately active.
+
+### From the API
+
+```bash
+curl -X POST http://localhost:8080/mock-server/servers/{mockServerId}/variants \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "operationId": "getUser",
+    "responseName": "Success",
+    "statusCode": "200",
+    "responseBody": "{\"id\": \"123\", \"name\": \"Alice\"}",
+    "isDefault": true
+  }'
+```
+
+---
+
+## Response strategies
+
+The response strategy controls **which variant is selected** when a request arrives. It is configured per mock server and can be overridden per operation.
+
+### Available strategies
+
+| Strategy | Behavior |
+|----------|----------|
+| `RANDOM` | Picks a variant at random on every request. Good for testing that your app handles any response correctly. |
+| `DEFAULT_ONLY` | Always returns the variant marked as `isDefault: true`. Good for stable happy-path testing. |
+| `SEQUENTIAL` | Cycles through variants in their display order, wrapping around. Good for scripting a specific sequence of responses. |
+| `ROUND_ROBIN` | Like `SEQUENTIAL` but the position is **persisted** across server restarts. Good for long-running test runs. |
+
+The default strategy for new mock servers is `RANDOM`.
+
+### Setting the strategy
+
+**From the UI:** Go to the **Configuration** tab of your mock server and select a strategy from the dropdown.
+
+**From the API:**
+```bash
+curl -X PATCH http://localhost:8080/mock-server/servers/{mockServerId} \
+  -H 'Content-Type: application/json' \
+  -d '{"defaultStrategy": "SEQUENTIAL"}'
+```
+
+### Per-operation strategy override
+
+You can set a different strategy for a specific operation without changing the server default:
+
+```bash
+curl -X PATCH http://localhost:8080/mock-server/servers/{mockServerId}/operations/{operationId} \
+  -H 'Content-Type: application/json' \
+  -d '{"responseStrategy": "DEFAULT_ONLY"}'
+```
+
+---
+
+## Forcing a specific status code
+
+Any request can include the `X-spec0-Preferred-Response-Code` header to bypass the strategy entirely and return the first variant that matches the requested status code:
+
+```bash
+curl http://localhost:8080/mock/{mockServerId}/users/123 \
+  -H 'X-spec0-Preferred-Response-Code: 404'
+```
+
+This is useful in tests where you need to trigger a specific error path on demand without reconfiguring the server.
+
+---
+
+## Managing variants
+
+**Reordering:** Variants are served in `displayOrder` when using `SEQUENTIAL` or `ROUND_ROBIN`. Reorder them in the UI by dragging, or set `displayOrder` explicitly via the API.
+
+**Deleting:** Delete a variant from the UI (trash icon) or:
+
+```bash
+curl -X DELETE http://localhost:8080/mock-server/servers/{mockServerId}/variants/{variantId}
+```
+
+**Reset to defaults:** The MCP tool `reset_to_defaults` (or a future API endpoint) removes all user-created variants and resets the strategy to `RANDOM`.
