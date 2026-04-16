@@ -11,7 +11,7 @@ A self-hosted OpenAPI mock server. Register a spec, get instant mock responses, 
 | | |
 |---|---|
 | [Quick start](../README.md#quick-start) | Run with Docker in 30 seconds |
-| [UI walkthrough (video)](../README.md#ui-walkthrough) | Screen recording of the bundled `/ui/` after startup |
+| [UI walkthrough](../README.md#ui-walkthrough) | Animated GIF walkthrough of the bundled `/ui/` after startup |
 | [Using the mock URL](./using-the-mock-url.md) | Point your app at the mock server, copy curl commands |
 
 ### Core concepts
