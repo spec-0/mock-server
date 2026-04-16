@@ -23,6 +23,7 @@
         <module>engine</module>
         <module>openapi-validation</module>
         <module>standalone</module>
+        <module>e2e-tests</module>
     </modules>
 
     <properties>
@@ -95,6 +96,13 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/spec-0/mock-server</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <pluginManagement>

@@ -5,6 +5,8 @@
 #   2. mvn -pl standalone -am package -DskipTests
 #   3. docker build -t spec0/mock-server:latest .
 #
+# REST E2E (build image, run container, hit APIs): ./scripts/e2e-against-docker.sh
+#
 # Build context: the `mock-server/` directory.
 
 FROM eclipse-temurin:17-jre-jammy

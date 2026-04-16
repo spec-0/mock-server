@@ -106,6 +106,23 @@ Run all tests:
 ./mvnw verify -Dskip.ui.copy=true
 ```
 
+### Docker REST E2E
+
+End-to-end tests hit a **real** HTTP server (not `@SpringBootTest` in-process). The script builds the fat JAR, builds the image, runs a container, waits for `/actuator/health`, runs `mock-server-e2e-tests` against that base URL, then removes the container.
+
+```bash
+chmod +x scripts/e2e-against-docker.sh   # once
+./scripts/e2e-against-docker.sh
+```
+
+Optional: `MOCK_SERVER_E2E_PORT=19090 ./scripts/e2e-against-docker.sh`, or `SKIP_UI_BUILD=1` if `ui/out` is already present.
+
+To run the E2E test module manually against any running instance:
+
+```bash
+./mvnw -f e2e-tests/pom.xml test -Dmock.server.baseUrl=http://localhost:8080
+```
+
 ---
 
 ## API reference

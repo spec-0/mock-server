@@ -89,10 +89,12 @@ public class DefaultMockServerService implements MockServerServicePort {
 
   private void generateDefaultVariants(
       UUID mockServerId, String specContent, List<MockServerOperation> ops) {
+    log.info("calling generateDefaultVariants with specContent : {}", specContent);
     String specJson = toJson(specContent);
     JsonNode allMocks = null;
     try {
       String mocksJson = new MockingClient().generateMockFromString(specJson);
+      log.info("generated mock from specJson - {}, is {}", specJson, mocksJson);
       allMocks = objectMapper.readTree(mocksJson);
     } catch (JsonProcessingException e) {
       log.warn("Could not parse mock generation output: {}", e.getMessage());
@@ -121,6 +123,7 @@ public class DefaultMockServerService implements MockServerServicePort {
                 body);
         v.setIsDefault(true);
         v.setIsGenerated(true);
+        v.setContentType(ContentTypeConstants.ANY);
         persistence.saveVariant(v);
       } catch (Exception e) {
         log.warn(

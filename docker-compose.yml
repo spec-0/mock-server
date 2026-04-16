@@ -1,5 +1,5 @@
 # API + bundled UI on port 8080 — http://localhost:8080/ui/
-# Usage (from apps/mock-server): docker compose up -d
+# Usage (from mock-server repo root): docker compose up -d
 #
 # Override Spring via environment, e.g.:
 #   environment:

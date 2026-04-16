@@ -49,6 +49,12 @@
             <artifactId>cel</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.spec0</groupId>
+            <artifactId>mock-server-openapi-validation</artifactId>
+            <version>${project.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>

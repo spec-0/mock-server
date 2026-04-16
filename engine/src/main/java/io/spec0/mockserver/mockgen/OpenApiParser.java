@@ -7,8 +7,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class OpenApiParser {
+  /** Path-item fields that are HTTP operations (OpenAPI 3.x); others are skipped. */
+  private static final Set<String> HTTP_METHODS =
+      Set.of("get", "post", "put", "delete", "patch", "options", "head", "trace");
+
   private final ObjectMapper jsonMapper = new ObjectMapper();
   private final YAMLMapper yamlMapper = new YAMLMapper();
 
@@ -38,17 +43,25 @@ public class OpenApiParser {
         .fields()
         .forEachRemaining(
             pathEntry -> {
+              String path = pathEntry.getKey();
               JsonNode pathItem = pathEntry.getValue();
               pathItem
                   .fields()
                   .forEachRemaining(
                       operationEntry -> {
-                        String method = operationEntry.getKey();
+                        String methodKey = operationEntry.getKey();
+                        if (!HTTP_METHODS.contains(methodKey.toLowerCase())) {
+                          return;
+                        }
+                        String method = methodKey.toLowerCase();
                         JsonNode operation = operationEntry.getValue();
+                        if (!operation.isObject()) {
+                          return;
+                        }
                         String operationId =
-                            operation.has("operationId")
+                            operation.hasNonNull("operationId")
                                 ? operation.get("operationId").asText()
-                                : method + "_" + pathEntry.getKey();
+                                : synthesiseOperationId(method, path);
 
                         JsonNode responses = operation.get("responses");
                         if (responses != null) {
@@ -65,5 +78,11 @@ public class OpenApiParser {
             });
 
     return apiOperations;
+  }
+
+  /** Delegates to {@link io.spec0.mockserver.engine.openapi.OpenApiSpecSupport}. */
+  static String synthesiseOperationId(String method, String path) {
+    return io.spec0.mockserver.engine.openapi.OpenApiSpecSupport.synthesiseOperationId(
+        method, path);
   }
 }
