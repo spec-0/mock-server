@@ -16,8 +16,31 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>mock-server-parent</name>
+    <name>${project.groupId}:${project.artifactId}</name>
     <description>Open-source mock server — engine, standalone app, and UI</description>
+    <url>https://github.com/spec-0/mock-server</url>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>spec0</name>
+            <organization>spec0</organization>
+            <organizationUrl>https://github.com/spec-0</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/spec-0/mock-server.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/spec-0/mock-server.git</developerConnection>
+        <url>https://github.com/spec-0/mock-server</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <modules>
         <module>engine</module>
@@ -97,13 +120,6 @@
         </dependencies>
     </dependencyManagement>
 
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/spec-0/mock-server</url>
-        </repository>
-    </distributionManagement>
-
     <build>
         <pluginManagement>
             <plugins>
@@ -143,4 +159,17 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <!-- mvn deploy -Pgithub-packages (see .github/workflows/publish.yml) -->
+        <profile>
+            <id>github-packages</id>
+            <distributionManagement>
+                <repository>
+                    <id>github</id>
+                    <url>https://maven.pkg.github.com/spec-0/mock-server</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
 </project>

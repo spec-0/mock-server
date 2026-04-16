@@ -3,6 +3,12 @@ name: Publish Engine to GitHub Packages
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Maven version to publish (e.g. 1.0.0). Used only for manual runs; tag pushes use the tag.'
+        required: true
+        default: '1.0.0'
 
 jobs:
   publish:
@@ -19,15 +25,20 @@ jobs:
           distribution: temurin
           cache: maven
           server-id: github
-          server-username: GITHUB_ACTOR
-          server-password: GITHUB_TOKEN
+          server-username: ${{ github.actor }}
+          server-password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set version from tag
+      - name: Set Maven version (from tag or manual input)
         run: |
-          TAG=${GITHUB_REF_NAME#v}
-          ./mvnw versions:set -DnewVersion=$TAG -DgenerateBackupPoms=false
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VER="${GITHUB_REF_NAME#v}"
+          else
+            VER="${{ github.event.inputs.version }}"
+          fi
+          echo "Publishing io.spec0:* version $VER"
+          ./mvnw versions:set -DnewVersion="$VER" -DgenerateBackupPoms=false
 
       - name: Deploy engine and openapi-validation to GitHub Packages
-        run: ./mvnw deploy -pl engine,openapi-validation -am -DskipTests
+        run: ./mvnw -B deploy -pl engine,openapi-validation -am -DskipTests -Pgithub-packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
