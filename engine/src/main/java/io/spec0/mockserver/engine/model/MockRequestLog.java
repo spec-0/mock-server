@@ -1,6 +1,8 @@
 package io.spec0.mockserver.engine.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +22,9 @@ public class MockRequestLog {
   private UUID variantId;
   private LocalDateTime requestedAt;
 
+  /** Optional per-request metrics (latency, etc.); persisted by adapters that support them. */
+  private List<MockRequestLogMetric> metrics = new ArrayList<>();
+
   public MockRequestLog(
       UUID mockServerId,
       String operationId,
@@ -34,5 +39,6 @@ public class MockRequestLog {
     this.responseStatusCode = responseStatusCode;
     this.variantId = variantId;
     this.requestedAt = LocalDateTime.now();
+    this.metrics = new ArrayList<>();
   }
 }
