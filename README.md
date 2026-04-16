@@ -143,16 +143,6 @@ To run the E2E test module manually against any running instance:
 
 ---
 
-## Library JARs (Maven)
-
-The pure Java **`mock-server-engine`** and **`mock-server-openapi-validation`** modules are published as **`io.spec0`** artifacts to **this repository’s GitHub Packages** Maven registry when you push a **`v*`** tag or run [Publish Engine to GitHub Packages](.github/workflows/publish.yml) manually (workflow uses `-Pgithub-packages`).
-
-**After merge:** publish a release version, for example `git tag v1.0.0 && git push origin v1.0.0`, or use **Actions → Publish Engine to GitHub Packages → Run workflow** and set the version input.
-
-**Consumers** add the Maven repository `https://maven.pkg.github.com/spec-0/mock-server` with `<id>github</id>` and authenticate (PAT with `read:packages`, or `GITHUB_TOKEN` in Actions with `packages: read` when the consumer repo can read this registry). Pin **`io.spec0:mock-server-engine`** and **`io.spec0:mock-server-openapi-validation`** to the same published version.
-
----
-
 ## API reference
 
 The full REST contract is available at `http://localhost:8080/swagger-ui.html` on a running instance, or statically at [`openapi.yaml`](openapi.yaml).
