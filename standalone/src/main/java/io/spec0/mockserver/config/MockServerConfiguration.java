@@ -1,5 +1,15 @@
 package io.spec0.mockserver.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.spec0.mockserver.engine.dispatch.CelEvaluator;
+import io.spec0.mockserver.engine.dispatch.MockRequestDispatcher;
+import io.spec0.mockserver.engine.service.DefaultApiSpecRegistrationService;
+import io.spec0.mockserver.engine.spi.ApiSpecCatalogPersistencePort;
+import io.spec0.mockserver.engine.spi.MockServerEnvVarPort;
+import io.spec0.mockserver.engine.spi.MockServerPersistencePort;
+import io.spec0.mockserver.openapi.validation.MockOpenApiValidator;
+import io.spec0.mockserver.repository.MockServerEnvVarRepository;
+import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -32,5 +42,31 @@ public class MockServerConfiguration {
         .locations("classpath:db/mock-server")
         .table("flyway_mock_server_history")
         .load();
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public DefaultApiSpecRegistrationService apiSpecRegistrationService(
+      ApiSpecCatalogPersistencePort catalog) {
+    return new DefaultApiSpecRegistrationService(catalog);
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public MockServerEnvVarPort mockServerEnvVarPort(MockServerEnvVarRepository repo) {
+    return id ->
+        repo.findByMockServerId(id).stream()
+            .collect(Collectors.toMap(e -> e.getVarKey(), e -> e.getVarValue()));
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public MockRequestDispatcher mockRequestDispatcher(
+      MockServerPersistencePort persistence,
+      MockServerEnvVarPort envVarPort,
+      MockOpenApiValidator validator,
+      ObjectMapper objectMapper) {
+    return new MockRequestDispatcher(
+        persistence, envVarPort, new CelEvaluator(), validator, objectMapper);
   }
 }

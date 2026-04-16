@@ -43,6 +43,9 @@ public class MockResponseVariantEntity {
   @Column(name = "status_code", nullable = false, length = 10)
   private String statusCode;
 
+  @Column(name = "content_type", nullable = false, length = 255)
+  private String contentType = "*/*";
+
   /** JSON string of the response body. Stored as TEXT — compatible with both H2 and Postgres. */
   @Column(name = "response_body", columnDefinition = "text")
   private String responseBody;

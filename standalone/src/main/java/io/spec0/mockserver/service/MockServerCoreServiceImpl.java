@@ -102,11 +102,13 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
   private void generateDefaultVariants(
       UUID mockServerId, String specContent, List<MockServerOperationEntity> ops) {
     // MockingClient only understands JSON — convert YAML spec to JSON first via swagger-parser
+    log.debug("called generateDefaultVariants with specContent : {}", specContent);
     String specJson = toJson(specContent);
     // MockingClient returns { operationId: { statusCode: responseBody } }
     JsonNode allMocks = null;
     try {
       String mocksJson = new MockingClient().generateMockFromString(specJson);
+      log.debug("generated mock variant json : {}", mocksJson);
       allMocks = objectMapper.readTree(mocksJson);
     } catch (JsonProcessingException e) {
       log.warn("Could not parse mock generation output: {}", e.getMessage());
