@@ -38,7 +38,9 @@ docker compose up -d
        +-----------------+
 ```
 
-After the server is up, open **`/ui/index.html`** to register specs, create mock servers, edit variants, and inspect logs. **[Screen recording (MOV)](docs/media/ui-walkthrough.mov)** walks through the same flow (~12 MB). On GitHub, use that link to open the file page (play in the browser where supported, or download). In a local clone, open `docs/media/ui-walkthrough.mov` with your system video player.
+After the server is up, open **`/ui/index.html`** to register specs, create mock servers, edit variants, and inspect logs.
+
+![Screen recording of the bundled web UI after startup](docs/media/ui-walkthrough.gif)
 
 ---
 
