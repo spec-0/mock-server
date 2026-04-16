@@ -275,6 +275,39 @@ paths:
                 items:
                   $ref: '#/components/schemas/MockRequestLog'
 
+  /mock-server/servers/{mockServerId}/analytics:
+    get:
+      tags: [logs]
+      operationId: getMockServerAnalytics
+      summary: Get mock server analytics
+      description: >
+        Aggregates request counts, error rate, average dispatch latency (from RESPONSE_LATENCY_MS
+        metrics when present), and per-day buckets for the admin UI — aligned with the cloud
+        platform analytics API shape.
+      parameters:
+        - $ref: '#/components/parameters/mockServerId'
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MockServerAnalytics'
+        '404':
+          description: Mock server not found
+
   # ── Operations ─────────────────────────────────────────────────────────────
 
   /mock-server/servers/{mockServerId}/spec-operations:
@@ -586,6 +619,34 @@ components:
         requestedAt:
           type: string
           format: date-time
+
+    MockServerAnalytics:
+      type: object
+      properties:
+        totalRequests:
+          type: integer
+        uniqueUsers:
+          type: integer
+        averageResponseTime:
+          type: number
+        errorRate:
+          type: number
+        uniqueOperations:
+          type: integer
+          description: Distinct operationIds with traffic in the selected range (OSS extension).
+        requestsByDay:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              count:
+                type: integer
+              averageLatencyMs:
+                type: number
+                nullable: true
 
     MockOperationConfig:
       type: object
