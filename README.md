@@ -24,6 +24,24 @@ docker compose up -d
 
 ---
 
+## UI walkthrough
+
+```
+       +-----------+       +----------------+
+       |  OpenAPI  |       |  Runtime mock   |
+       |  document | ----> |  /mock/{id}/…   |
+       +-----------+       +----------------+
+              ^
+              |  manage in browser
+       +-----------------+
+       |  Web UI  /ui/   |
+       +-----------------+
+```
+
+After the server is up, open **`/ui/`** to register specs, create mock servers, edit variants, and inspect logs. **[Screen recording (MOV)](docs/media/ui-walkthrough.mov)** walks through the same flow (~12 MB). On GitHub, use that link to open the file page (play in the browser where supported, or download). In a local clone, open `docs/media/ui-walkthrough.mov` with your system video player.
+
+---
+
 ## Features
 
 - **Auto-generated responses** from your OpenAPI spec — no setup beyond uploading the spec
