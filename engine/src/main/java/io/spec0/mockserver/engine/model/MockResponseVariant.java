@@ -16,6 +16,10 @@ public class MockResponseVariant {
   private String operationId;
   private String responseName;
   private String statusCode;
+
+  /** Normalized media type for this variant; {@link ContentTypeConstants#ANY} when unspecified. */
+  private String contentType = ContentTypeConstants.ANY;
+
   private String responseBody;
   private String headers;
   private Boolean isDefault = false;
