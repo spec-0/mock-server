@@ -19,14 +19,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # server-username / server-password must be env *names* (e.g. GITHUB_TOKEN),
+      # not ${{ }} values — otherwise settings.xml points at wrong env keys and deploy gets 401.
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: temurin
           cache: maven
           server-id: github
-          server-username: ${{ github.actor }}
-          server-password: ${{ secrets.GITHUB_TOKEN }}
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set Maven version (from tag or manual input)
         run: |
