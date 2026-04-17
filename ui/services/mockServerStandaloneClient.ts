@@ -506,8 +506,15 @@ export class MockServerStandaloneClient {
     }
   }
 
-  async getAnalytics(_mockServerId: string): Promise<null> {
-    return null;
+  async getAnalytics(mockServerId: string, from?: string, to?: string): Promise<unknown> {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const q = params.toString();
+    const url = `${this.baseUrl}/mock-server/servers/${mockServerId}/analytics${q ? `?${q}` : ''}`;
+    const response = await fetch(url, { headers: this.headers() });
+    if (!response.ok) return handleError(response, 'Failed to load analytics');
+    return response.json();
   }
 
   /**

@@ -8,7 +8,7 @@
  * No Clerk auth, no org/team context.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ExternalLink, Activity, FileText, BarChart3, Settings, Pause, Play, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ import type {
   MockServerEnvVar,
   MockServerMcpConfig,
   GeneratedRequest,
+  DashboardData,
 } from '@/services/mockServerAdminClient';
 import type { Operation } from '@/lib/api/types';
 
@@ -35,6 +36,7 @@ import MockServerOverview from './MockServerOverview';
 import MockServerEndpoints from './MockServerEndpoints';
 import MockServerConfiguration from './MockServerConfiguration';
 import MockServerLogs from './MockServerLogs';
+import MockServerAnalyticsComponent from './MockServerAnalytics';
 import MockServerSettings from './MockServerSettings';
 
 interface Props {
@@ -55,12 +57,58 @@ export default function StandaloneMockServerPage({ mockServerId }: Props) {
   const [specOperations, setSpecOperations] = useState<Operation[]>([]);
   const [mcpConfig, setMcpConfig] = useState<MockServerMcpConfig | null>(null);
   const [envVars, setEnvVars] = useState<MockServerEnvVar[]>([]);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [isToggling, setIsToggling] = useState(false);
 
   const hasLoaded = useRef(false);
+
+  const toDateInputValue = (d: Date) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const adjustDateInput = (dateStr: string, deltaDays: number) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + deltaDays);
+    return toDateInputValue(dt);
+  };
+
+  const loadOverviewDashboardData = useCallback(async (ms: MockServer) => {
+    const id = ms.mockServerId;
+    if (!id) return;
+    const today = toDateInputValue(new Date());
+    const allTimeFrom = '2000-01-01';
+    const adjustedFrom = adjustDateInput(allTimeFrom, -1);
+    const adjustedTo = adjustDateInput(today, 1);
+    try {
+      const analytics: any = await client.getAnalytics(id, adjustedFrom, adjustedTo);
+      const totalRequests = Number(analytics?.totalRequests ?? 0);
+      const errorRateRaw = Number(analytics?.errorRate ?? 0);
+      const errorRateFraction = errorRateRaw > 1 ? errorRateRaw / 100 : errorRateRaw;
+      const failedRequests = Math.max(0, Math.round(totalRequests * errorRateFraction));
+      const successfulRequests = Math.max(0, totalRequests - failedRequests);
+      const avgResponseTime = Number(analytics?.averageResponseTime ?? 0);
+      setDashboardData({
+        mockServer: ms,
+        recentAnalytics: [],
+        summary: {
+          totalRequests,
+          successfulRequests,
+          failedRequests,
+          avgResponseTime,
+          uniqueOperations: Number(analytics?.uniqueOperations ?? 0),
+        },
+      });
+    } catch {
+      setDashboardData(null);
+    }
+  }, [client]);
 
   useEffect(() => {
     if (hasLoaded.current) return;
@@ -71,6 +119,7 @@ export default function StandaloneMockServerPage({ mockServerId }: Props) {
         setLoading(true);
         const ms = await client.getMockServer(mockServerId);
         setMockServer(ms);
+        void loadOverviewDashboardData(ms);
 
         const [cfgRes, varRes, logsRes, opRes, specOpsRes, mcpRes, envRes] = await Promise.allSettled([
           client.getMockServerConfig(mockServerId),
@@ -97,7 +146,7 @@ export default function StandaloneMockServerPage({ mockServerId }: Props) {
     };
 
     load();
-  }, [client, mockServerId]);
+  }, [client, mockServerId, loadOverviewDashboardData]);
 
   const handleToggle = async (enabled: boolean) => {
     if (!mockServer) return;
@@ -105,6 +154,7 @@ export default function StandaloneMockServerPage({ mockServerId }: Props) {
     try {
       const updated = await client.performMockServerAction(mockServerId, enabled ? 'enable' : 'disable');
       setMockServer(updated);
+      void loadOverviewDashboardData(updated);
       toast({ title: enabled ? 'Mock Server Enabled' : 'Mock Server Disabled' });
     } catch (err) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to update.', variant: 'destructive' });
@@ -200,7 +250,10 @@ export default function StandaloneMockServerPage({ mockServerId }: Props) {
       client.getMockServer(mockServerId),
       client.getLogs(mockServerId, 50),
     ]);
-    if (fresh.status === 'fulfilled') setMockServer(fresh.value);
+    if (fresh.status === 'fulfilled') {
+      setMockServer(fresh.value);
+      void loadOverviewDashboardData(fresh.value);
+    }
     if (freshLogs.status === 'fulfilled') setLogs(freshLogs.value);
   };
 
@@ -296,7 +349,7 @@ export default function StandaloneMockServerPage({ mockServerId }: Props) {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto gap-1">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Activity className="h-4 w-4" /><span>Overview</span>
           </TabsTrigger>
@@ -309,6 +362,9 @@ export default function StandaloneMockServerPage({ mockServerId }: Props) {
           <TabsTrigger value="logs" className="flex items-center gap-2">
             <FileText className="h-4 w-4" /><span>Logs</span>
           </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" /><span>Analytics</span>
+          </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" /><span>Settings</span>
           </TabsTrigger>
@@ -317,7 +373,7 @@ export default function StandaloneMockServerPage({ mockServerId }: Props) {
         <TabsContent value="overview">
           <MockServerOverview
             mockServer={mockServer}
-            dashboardData={null}
+            dashboardData={dashboardData}
             onRefresh={handleRefresh}
           />
         </TabsContent>
@@ -352,6 +408,10 @@ export default function StandaloneMockServerPage({ mockServerId }: Props) {
             apiClient={client as any}
             onRefresh={handleRefresh}
           />
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <MockServerAnalyticsComponent mockServerId={mockServerId} apiClient={client as any} />
         </TabsContent>
 
         <TabsContent value="settings">

@@ -2,6 +2,7 @@ package io.spec0.mockserver.adapter;
 
 import io.spec0.mockserver.domain.MockOperationConfigEntity;
 import io.spec0.mockserver.domain.MockRequestLogEntity;
+import io.spec0.mockserver.domain.MockRequestLogMetricEntity;
 import io.spec0.mockserver.domain.MockResponseVariantEntity;
 import io.spec0.mockserver.domain.MockServerConfigEntity;
 import io.spec0.mockserver.domain.MockServerEntity;
@@ -9,6 +10,7 @@ import io.spec0.mockserver.domain.MockServerOperationEntity;
 import io.spec0.mockserver.engine.model.ContentTypeConstants;
 import io.spec0.mockserver.engine.model.MockOperationConfig;
 import io.spec0.mockserver.engine.model.MockRequestLog;
+import io.spec0.mockserver.engine.model.MockRequestLogMetric;
 import io.spec0.mockserver.engine.model.MockResponseStrategy;
 import io.spec0.mockserver.engine.model.MockResponseVariant;
 import io.spec0.mockserver.engine.model.MockServer;
@@ -17,6 +19,7 @@ import io.spec0.mockserver.engine.model.MockServerOperation;
 import io.spec0.mockserver.engine.spi.MockServerPersistencePort;
 import io.spec0.mockserver.openapi.validation.SchemaValidationMode;
 import io.spec0.mockserver.repository.MockOperationConfigRepository;
+import io.spec0.mockserver.repository.MockRequestLogMetricRepository;
 import io.spec0.mockserver.repository.MockRequestLogRepository;
 import io.spec0.mockserver.repository.MockServerConfigRepository;
 import io.spec0.mockserver.repository.MockServerOperationRepository;
@@ -45,6 +48,7 @@ public class MockServerPersistenceAdapter implements MockServerPersistencePort {
   private final MockServerConfigRepository configRepository;
   private final MockServerOperationRepository operationRepository;
   private final MockRequestLogRepository logRepository;
+  private final MockRequestLogMetricRepository logMetricRepository;
 
   // ── MockServer ───────────────────────────────────────────────────────────
 
@@ -203,7 +207,17 @@ public class MockServerPersistenceAdapter implements MockServerPersistencePort {
             log.getRequestMethod(),
             log.getResponseStatusCode(),
             log.getVariantId());
-    logRepository.save(entity);
+    if (log.getRequestedAt() != null) {
+      entity.setRequestedAt(log.getRequestedAt());
+    }
+    MockRequestLogEntity saved = logRepository.save(entity);
+    if (log.getMetrics() != null) {
+      for (MockRequestLogMetric m : log.getMetrics()) {
+        logMetricRepository.save(
+            new MockRequestLogMetricEntity(
+                saved.getLogId(), m.key(), m.intValue(), m.doubleValue(), m.textValue()));
+      }
+    }
   }
 
   @Override

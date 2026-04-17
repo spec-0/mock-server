@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spec0.mockserver.engine.model.MockOperationConfig;
 import io.spec0.mockserver.engine.model.MockRequestLog;
+import io.spec0.mockserver.engine.model.MockRequestLogMetric;
 import io.spec0.mockserver.engine.model.MockResponseStrategy;
 import io.spec0.mockserver.engine.model.MockResponseVariant;
 import io.spec0.mockserver.engine.model.MockServer;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +68,7 @@ public class MockRequestDispatcher {
   }
 
   public MockResponse dispatch(UUID mockServerId, MockRequest request) {
+    final long dispatchStartedNanos = System.nanoTime();
     Optional<MockServer> serverOpt = persistence.findMockServerById(mockServerId);
     if (serverOpt.isEmpty()) {
       return errorResponse(404, "mock_server_not_found", null);
@@ -78,15 +81,22 @@ public class MockRequestDispatcher {
 
     String path = request.path();
     String method = request.method();
+    List<io.spec0.mockserver.engine.model.MockServerOperation> operations =
+        persistence.findOperationsBySpecId(server.getSpecId());
 
     OperationMatcher.ResolvedOperation resolved =
-        OperationMatcher.resolve(
-            persistence.findOperationsBySpecId(server.getSpecId()),
-            path,
-            method,
-            request.operationIdOverride());
+        OperationMatcher.resolve(operations, path, method, request.operationIdOverride());
     String operationId = resolved.operationId();
-    log.info("Mock request {} {} → operationId={}", method, path, operationId);
+    log.info(
+        "mockDispatch resolved mockServerId={} specId={} method={} path={} operationId={} pathParams={} operationsCount={} override={}",
+        mockServerId,
+        server.getSpecId(),
+        method,
+        path,
+        operationId,
+        resolved.pathParams(),
+        operations.size(),
+        request.operationIdOverride());
 
     SchemaValidationMode validationMode =
         persistence
@@ -113,6 +123,13 @@ public class MockRequestDispatcher {
     List<MockResponseVariant> variants =
         persistence.findVariantsByMockServerIdAndOperationIdOrderByDisplayOrder(
             mockServerId, operationId);
+    log.info(
+        "mockDispatch variants mockServerId={} operationId={} strategy={} variantCount={} operationEnabled={}",
+        mockServerId,
+        operationId,
+        strategy,
+        variants.size(),
+        opConfigOpt.map(MockOperationConfig::getIsEnabled).orElse(true));
 
     if (variants.isEmpty()) {
       return errorResponse(404, "no_variants_for_operation", operationId);
@@ -120,6 +137,14 @@ public class MockRequestDispatcher {
 
     MockResponseVariant selected =
         selectVariant(variants, strategy, opConfigOpt, request.preferredStatusCode());
+    log.info(
+        "mockDispatch selected mockServerId={} operationId={} variantId={} statusCode={} responseName={} preferredStatus={}",
+        mockServerId,
+        operationId,
+        selected.getVariantId(),
+        selected.getStatusCode(),
+        selected.getResponseName(),
+        request.preferredStatusCode());
 
     // CEL evaluation
     if (selected.getCelExpression() != null) {
@@ -128,14 +153,16 @@ public class MockRequestDispatcher {
       Optional<CelEvaluator.CelResult> celResult =
           celEvaluator.evaluate(selected.getCelExpression(), ctx, envVars);
       if (celResult.isPresent()) {
-        persistence.saveRequestLog(
+        MockRequestLog celLog =
             new MockRequestLog(
                 mockServerId,
                 operationId,
                 path,
                 method,
                 String.valueOf(celResult.get().status()),
-                selected.getVariantId()));
+                selected.getVariantId());
+        appendDispatchLatency(celLog, dispatchStartedNanos);
+        persistence.saveRequestLog(celLog);
         return buildCelResponse(celResult.get(), selected, operationId);
       }
       log.warn(
@@ -143,16 +170,23 @@ public class MockRequestDispatcher {
           selected.getVariantId());
     }
 
-    persistence.saveRequestLog(
+    MockRequestLog okLog =
         new MockRequestLog(
             mockServerId,
             operationId,
             path,
             method,
             selected.getStatusCode(),
-            selected.getVariantId()));
+            selected.getVariantId());
+    appendDispatchLatency(okLog, dispatchStartedNanos);
+    persistence.saveRequestLog(okLog);
 
     return buildResponse(selected, operationId);
+  }
+
+  private static void appendDispatchLatency(MockRequestLog log, long dispatchStartedNanos) {
+    long ms = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - dispatchStartedNanos);
+    log.addMetric(MockRequestLogMetric.latencyMs(Math.max(0, ms)));
   }
 
   // ── Operation resolution (see OperationMatcher) ─────────────────────────

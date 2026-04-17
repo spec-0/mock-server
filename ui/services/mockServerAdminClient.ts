@@ -125,12 +125,29 @@ export interface GeneratedUrl {
   mockUrl: string;
 }
 
-/** Dashboard analytics — standalone returns null; components handle null gracefully */
-export interface DashboardData {
+/** Optional row shape for “Recent activity” on the overview (cloud may populate). */
+export interface MockServerAnalytics {
+  analyticsId: string;
+  date: string;
   totalRequests: number;
-  successRate: number;
   avgResponseTimeMs: number;
-  requestsLast24h: number;
+  mostPopularOperation?: string;
+}
+
+/**
+ * Overview dashboard — same nested shape as cloud {@link DashboardData} so {@link MockServerOverview}
+ * matches the platform mock server page.
+ */
+export interface DashboardData {
+  mockServer: MockServer;
+  recentAnalytics: MockServerAnalytics[];
+  summary: {
+    totalRequests: number;
+    successfulRequests: number;
+    failedRequests: number;
+    avgResponseTime: number;
+    uniqueOperations: number;
+  };
 }
 
 /**

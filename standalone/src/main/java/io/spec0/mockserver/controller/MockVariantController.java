@@ -2,14 +2,18 @@ package io.spec0.mockserver.controller;
 
 import io.spec0.mockserver.domain.MockRequestLogEntity;
 import io.spec0.mockserver.domain.MockResponseVariantEntity;
+import io.spec0.mockserver.dto.MockServerAnalyticsResponse;
 import io.spec0.mockserver.dto.VariantCreateDto;
 import io.spec0.mockserver.dto.VariantSaveResponse;
 import io.spec0.mockserver.dto.VariantSaveResult;
 import io.spec0.mockserver.port.MockServerServicePort;
 import io.spec0.mockserver.service.MockServerCoreServiceImpl;
+import io.spec0.mockserver.service.StandaloneMockServerAnalyticsService;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +25,7 @@ public class MockVariantController {
 
   private final MockServerServicePort mockServerService;
   private final MockServerCoreServiceImpl coreService;
+  private final StandaloneMockServerAnalyticsService analyticsService;
 
   @GetMapping("/variants")
   public ResponseEntity<List<MockResponseVariantEntity>> listVariants(
@@ -70,5 +75,16 @@ public class MockVariantController {
       return ResponseEntity.notFound().build();
     }
     return ResponseEntity.ok(coreService.getRecentLogs(mockServerId, Math.min(limit, 200)));
+  }
+
+  @GetMapping("/analytics")
+  public ResponseEntity<MockServerAnalyticsResponse> getAnalytics(
+      @PathVariable UUID mockServerId,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+    if (mockServerService.findById(mockServerId).isEmpty()) {
+      return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok(analyticsService.aggregate(mockServerId, from, to));
   }
 }

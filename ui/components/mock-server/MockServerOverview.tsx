@@ -14,12 +14,10 @@ interface MockServerOverviewProps {
   onRefresh: () => void;
 }
 
+/** Overview tab — aligned with cloud platform {@link MockServerOverview} (summary + optional recent activity). */
 export default function MockServerOverview({ mockServer, dashboardData, onRefresh }: MockServerOverviewProps) {
   const baseUrl = useStandaloneBaseUrl();
-  const totalRequests = dashboardData?.totalRequests ?? 0;
-  const successRate = dashboardData?.successRate ?? 0;
-  const avgMs = dashboardData?.avgResponseTimeMs ?? 0;
-  const ops24h = dashboardData?.requestsLast24h ?? 0;
+  const summary = dashboardData?.summary;
 
   const mockBaseUrl = `${baseUrl}/mock/${mockServer.mockServerId}`;
 
@@ -32,8 +30,8 @@ export default function MockServerOverview({ mockServer, dashboardData, onRefres
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRequests}</div>
-            <p className="text-xs text-muted-foreground">Recorded traffic (when analytics are available)</p>
+            <div className="text-2xl font-bold">{summary?.totalRequests ?? 0}</div>
+            <p className="text-xs text-muted-foreground">All time requests</p>
           </CardContent>
         </Card>
 
@@ -43,8 +41,13 @@ export default function MockServerOverview({ mockServer, dashboardData, onRefres
             <CheckCircle2 className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{Math.round(successRate)}%</div>
-            <p className="text-xs text-muted-foreground">Self-hosted summary</p>
+            <div className="text-2xl font-bold">
+              {summary && summary.totalRequests > 0
+                ? Math.round((summary.successfulRequests / summary.totalRequests) * 100)
+                : 0}
+              %
+            </div>
+            <p className="text-xs text-muted-foreground">{summary?.successfulRequests ?? 0} successful</p>
           </CardContent>
         </Card>
 
@@ -54,19 +57,19 @@ export default function MockServerOverview({ mockServer, dashboardData, onRefres
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{avgMs}ms</div>
+            <div className="text-2xl font-bold">{summary?.avgResponseTime ?? 0}ms</div>
             <p className="text-xs text-muted-foreground">Average response time</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Requests (24h)</CardTitle>
+            <CardTitle className="text-sm font-medium">Unique Operations</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{ops24h}</div>
-            <p className="text-xs text-muted-foreground">Last 24 hours</p>
+            <div className="text-2xl font-bold">{summary?.uniqueOperations ?? 0}</div>
+            <p className="text-xs text-muted-foreground">Different endpoints called</p>
           </CardContent>
         </Card>
       </div>
@@ -123,6 +126,38 @@ export default function MockServerOverview({ mockServer, dashboardData, onRefres
           </CardContent>
         </Card>
       </div>
+
+      {dashboardData?.recentAnalytics && dashboardData.recentAnalytics.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Latest analytics data for your mock server</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {dashboardData.recentAnalytics.slice(0, 5).map((analytics, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <div>
+                      <p className="text-sm font-medium">
+                        {analytics.mostPopularOperation || 'Unknown Operation'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(analytics.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{analytics.totalRequests} requests</p>
+                    <p className="text-xs text-muted-foreground">{analytics.avgResponseTimeMs}ms avg</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
