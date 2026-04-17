@@ -36,7 +36,7 @@ jobs:
             VER="${{ github.event.inputs.version }}"
           fi
           echo "Publishing io.spec0:* version $VER"
-          ./mvnw versions:set -DnewVersion="$VER" -DgenerateBackupPoms=false
+          ./mvnw versions:set -DnewVersion="$VER" -DgenerateBackupPoms=false -DprocessAllModules=true
 
       - name: Deploy engine and openapi-validation to GitHub Packages
         run: ./mvnw -B deploy -pl engine,openapi-validation -am -DskipTests -Pgithub-packages
