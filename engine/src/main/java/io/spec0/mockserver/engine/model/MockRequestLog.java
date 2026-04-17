@@ -2,8 +2,10 @@ package io.spec0.mockserver.engine.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,7 +25,17 @@ public class MockRequestLog {
   private LocalDateTime requestedAt;
 
   /** Optional per-request metrics (latency, etc.); persisted by adapters that support them. */
+  @Getter(AccessLevel.NONE)
+  @Setter(AccessLevel.NONE)
   private List<MockRequestLogMetric> metrics = new ArrayList<>();
+
+  public List<MockRequestLogMetric> getMetrics() {
+    return Collections.unmodifiableList(metrics);
+  }
+
+  public void setMetrics(List<MockRequestLogMetric> metrics) {
+    this.metrics = metrics == null ? new ArrayList<>() : new ArrayList<>(metrics);
+  }
 
   public MockRequestLog(
       UUID mockServerId,
