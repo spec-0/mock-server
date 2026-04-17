@@ -186,7 +186,7 @@ public class MockRequestDispatcher {
 
   private static void appendDispatchLatency(MockRequestLog log, long dispatchStartedNanos) {
     long ms = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - dispatchStartedNanos);
-    log.getMetrics().add(MockRequestLogMetric.latencyMs(Math.max(0, ms)));
+    log.addMetric(MockRequestLogMetric.latencyMs(Math.max(0, ms)));
   }
 
   // ── Operation resolution (see OperationMatcher) ─────────────────────────

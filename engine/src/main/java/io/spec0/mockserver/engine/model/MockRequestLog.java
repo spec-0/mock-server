@@ -37,6 +37,13 @@ public class MockRequestLog {
     this.metrics = metrics == null ? new ArrayList<>() : new ArrayList<>(metrics);
   }
 
+  /** Appends a metric; {@link #getMetrics()} remains an unmodifiable view. */
+  public void addMetric(MockRequestLogMetric metric) {
+    if (metric != null) {
+      metrics.add(metric);
+    }
+  }
+
   public MockRequestLog(
       UUID mockServerId,
       String operationId,
