@@ -10,6 +10,7 @@ import io.spec0.mockserver.dto.VariantSaveResult;
 import io.spec0.mockserver.error.MockApiException;
 import io.spec0.mockserver.mockgen.MockingClient;
 import io.spec0.mockserver.openapi.validation.MockOpenApiValidator;
+import io.spec0.mockserver.openapi.validation.OpenApiSpecJson;
 import io.spec0.mockserver.openapi.validation.OpenApiValidationResult;
 import io.spec0.mockserver.openapi.validation.SchemaValidationMode;
 import io.spec0.mockserver.port.ApiSpecServicePort;
@@ -469,7 +470,12 @@ public class MockServerCoreServiceImpl implements MockServerServicePort {
     try {
       ParseOptions opts = new ParseOptions();
       opts.setResolve(false);
-      OpenAPI api = new OpenAPIV3Parser().readContents(specContent, null, opts).getOpenAPI();
+      // Pre-convert YAML to JSON with a raised code-point limit so large specs don't trip
+      // SnakeYAML's default 3 MB per-document limit inside swagger-parser.
+      OpenAPI api =
+          new OpenAPIV3Parser()
+              .readContents(OpenApiSpecJson.toParseableJson(specContent), null, opts)
+              .getOpenAPI();
       if (api != null) {
         return Json.mapper().writeValueAsString(api);
       }

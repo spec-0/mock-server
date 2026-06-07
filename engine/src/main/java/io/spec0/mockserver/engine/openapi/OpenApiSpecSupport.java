@@ -1,6 +1,7 @@
 package io.spec0.mockserver.engine.openapi;
 
 import io.spec0.mockserver.engine.model.MockServerOperation;
+import io.spec0.mockserver.openapi.validation.OpenApiSpecJson;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
@@ -40,7 +41,9 @@ public final class OpenApiSpecSupport {
     try {
       ParseOptions opts = new ParseOptions();
       opts.setResolve(false);
-      SwaggerParseResult result = new OpenAPIV3Parser().readContents(specContent, null, opts);
+      SwaggerParseResult result =
+          new OpenAPIV3Parser()
+              .readContents(OpenApiSpecJson.toParseableJson(specContent), null, opts);
       if (result.getOpenAPI() != null && result.getOpenAPI().getInfo() != null) {
         return result.getOpenAPI().getInfo().getVersion();
       }
@@ -59,7 +62,9 @@ public final class OpenApiSpecSupport {
     try {
       ParseOptions opts = new ParseOptions();
       opts.setResolve(true);
-      SwaggerParseResult result = new OpenAPIV3Parser().readContents(specContent, null, opts);
+      SwaggerParseResult result =
+          new OpenAPIV3Parser()
+              .readContents(OpenApiSpecJson.toParseableJson(specContent), null, opts);
       OpenAPI openAPI = result.getOpenAPI();
       if (openAPI == null || openAPI.getPaths() == null) {
         log.warn("No paths found in spec {}", specId != null ? specId : "(new)");

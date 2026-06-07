@@ -2,12 +2,15 @@ package io.spec0.mockserver.mockgen;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import io.spec0.mockserver.openapi.validation.OpenApiSpecJson;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.yaml.snakeyaml.LoaderOptions;
 
 public class OpenApiParser {
   /** Path-item fields that are HTTP operations (OpenAPI 3.x); others are skipped. */
@@ -15,7 +18,16 @@ public class OpenApiParser {
       Set.of("get", "post", "put", "delete", "patch", "options", "head", "trace");
 
   private final ObjectMapper jsonMapper = new ObjectMapper();
-  private final YAMLMapper yamlMapper = new YAMLMapper();
+
+  // Raise SnakeYAML's per-document code-point limit so large specs (>3 MB) parse. SnakeYAML 2.x
+  // defaults to 3 MB; see OpenApiSpecJson#MAX_SPEC_CODE_POINTS.
+  private final YAMLMapper yamlMapper = buildYamlMapper();
+
+  private static YAMLMapper buildYamlMapper() {
+    LoaderOptions loaderOptions = new LoaderOptions();
+    loaderOptions.setCodePointLimit(OpenApiSpecJson.MAX_SPEC_CODE_POINTS);
+    return new YAMLMapper(YAMLFactory.builder().loaderOptions(loaderOptions).build());
+  }
 
   public JsonNode parseSpec(File file) throws IOException {
     if (file.getName().endsWith(".yaml")
