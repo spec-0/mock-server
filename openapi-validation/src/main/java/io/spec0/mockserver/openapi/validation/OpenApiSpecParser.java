@@ -20,7 +20,11 @@ public final class OpenApiSpecParser {
     // self-contained JSON Schema tree. Otherwise networknt resolves $ref only inside the fragment
     // passed to SchemaRegistry and throws InvalidSchemaRefException for component references.
     opts.setResolveFully(true);
-    SwaggerParseResult result = new OpenAPIV3Parser().readContents(specContent, null, opts);
+    // Pre-convert YAML to JSON with a raised code-point limit so large specs don't trip
+    // SnakeYAML's default 3 MB per-document limit inside swagger-parser.
+    SwaggerParseResult result =
+        new OpenAPIV3Parser()
+            .readContents(OpenApiSpecJson.toParseableJson(specContent), null, opts);
     if (result.getOpenAPI() == null) {
       String msg =
           result.getMessages() == null
