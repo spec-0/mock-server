@@ -1,6 +1,6 @@
 # Mock server OpenAPI schema validation
 
-Standalone mock-server can validate **JSON request bodies** at runtime and **static variant response bodies** on save, using the same OpenAPI document stored as `api_specs.spec_content`.
+Standalone mock-server can validate **JSON request bodies** and **required request parameters** (query / path / header) at runtime, and **static variant response bodies** on save, using the same OpenAPI document stored as `api_specs.spec_content`.
 
 ## Supported stacks
 
@@ -31,8 +31,9 @@ Very large specs may require tuning `mockserver.openapi-cache.*` in `application
 ## Behaviour
 
 - **OFF**: No validation.
-- **WARN**: Log validation failures; do not block requests or variant saves.
-- **STRICT**: Reject invalid request JSON (HTTP 4xx) or variant save with `IllegalArgumentException`.
+- **WARN**: Log validation failures (invalid request JSON, missing required parameters); do not block requests or variant saves.
+- **STRICT**: Reject invalid request JSON or requests missing a required parameter (`query`/`path`/`header`) with HTTP 400 (`error: request_validation_failed`), or a variant save with `IllegalArgumentException`.
+- **Required parameters**: presence-only check for parameters marked `required: true`; value type/format is not checked. Cookie parameters are out of scope.
 - **CEL variants**: Response body is not validated at save time; runtime response validation is out of scope for v1.
 - **Cache**: Parsed specs are cached per `specId`; new registrations call `ParsedOpenApiCache.invalidate(specId)` after insert.
 

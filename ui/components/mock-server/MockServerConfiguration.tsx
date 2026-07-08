@@ -173,11 +173,11 @@ export default function MockServerConfiguration({ config, onConfigUpdate, onSync
                 <SelectContent>
                   <SelectItem value="OFF">Off</SelectItem>
                   <SelectItem value="WARN">Warn (log mismatches)</SelectItem>
-                  <SelectItem value="STRICT">Strict (reject invalid JSON)</SelectItem>
+                  <SelectItem value="STRICT">Strict (reject invalid requests)</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
-                Validates incoming JSON requests and static variant response bodies against the OpenAPI spec (CEL variants skip response validation).
+                Validates incoming requests against the OpenAPI spec — the JSON body plus any required query, path, and header parameters — and static variant response bodies (CEL variants skip response validation). Strict rejects with 400; Warn only logs.
               </p>
             </div>
 

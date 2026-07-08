@@ -61,6 +61,10 @@ When a variant is saved in `WARN` mode and the body has violations, the `201 Cre
 | **Static variant bodies** | At **save time** — validated against the OpenAPI response schema for the declared status code |
 | **CEL variant bodies** | Not validated at save time (output is only known at request time) |
 | **Incoming request bodies** | At **request time** — validated against the OpenAPI request schema, per the same mode setting |
+| **Required request parameters** | At **request time** — `STRICT` rejects (and `WARN` logs) requests missing any parameter marked `required: true` in the spec (`query`, `path`, `header`). This is a presence check; parameter value types/formats are not checked. Cookie parameters are out of scope. |
+
+> [!NOTE]
+> In `STRICT` mode, a request missing a required body field **or** a required parameter is rejected with `400 Bad Request` and an `error` of `request_validation_failed`; the `details` array names each missing item.
 
 > [!NOTE]
 > Changing the mode does not retroactively re-validate existing variants — it only applies to new saves and incoming requests going forward.

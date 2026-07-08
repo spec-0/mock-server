@@ -1,5 +1,6 @@
 package io.spec0.mockserver.openapi.validation;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -7,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.models.OpenAPI;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -136,5 +138,94 @@ class DefaultMockOpenApiValidatorTest {
     JsonNode body = mapper.readTree("{\"id\":\"cart-1\"}");
     OpenApiValidationResult r = v.validateResponseBody(SPEC, "getCart", "200", body, true);
     assertTrue(r.valid(), r.toString());
+  }
+
+  // ── Required parameter validation ──────────────────────────────────────────
+
+  private DefaultMockOpenApiValidator paramsValidator() throws Exception {
+    OpenAPI api =
+        new OpenApiSpecParser()
+            .parse(
+                new String(
+                    getClass().getResourceAsStream("/openapi-30-parameters.yaml").readAllBytes(),
+                    StandardCharsets.UTF_8));
+    return new DefaultMockOpenApiValidator(newFixedCache(api), mapper);
+  }
+
+  @Test
+  void parameters_allRequiredPresent_isValid() throws Exception {
+    DefaultMockOpenApiValidator v = paramsValidator();
+    OpenApiValidationResult r =
+        v.validateRequestParameters(
+            SPEC,
+            "listOrderItems",
+            Map.of("status", "open"),
+            Map.of("orderId", "o-1"),
+            Map.of("x-tenant-id", "acme"));
+    assertTrue(r.valid(), r.toString());
+  }
+
+  @Test
+  void parameters_missingRequiredQuery_isInvalid() throws Exception {
+    DefaultMockOpenApiValidator v = paramsValidator();
+    OpenApiValidationResult r =
+        v.validateRequestParameters(
+            SPEC,
+            "listOrderItems",
+            Map.of(), // no status
+            Map.of("orderId", "o-1"),
+            Map.of("x-tenant-id", "acme"));
+    assertFalse(r.skipped(), r.toString());
+    assertFalse(r.valid(), r.toString());
+    assertTrue(
+        r.errors().stream().anyMatch(e -> e.contains("query parameter 'status'")), r.toString());
+  }
+
+  @Test
+  void parameters_missingRequiredHeaderAndPath_reportsBoth() throws Exception {
+    DefaultMockOpenApiValidator v = paramsValidator();
+    OpenApiValidationResult r =
+        v.validateRequestParameters(
+            SPEC,
+            "listOrderItems",
+            Map.of("status", "open"),
+            Map.of(), // no orderId
+            Map.of()); // no X-Tenant-Id
+    assertFalse(r.valid(), r.toString());
+    assertEquals(2, r.errors().size(), r.toString());
+    assertTrue(r.errors().stream().anyMatch(e -> e.contains("header 'X-Tenant-Id'")), r.toString());
+    assertTrue(
+        r.errors().stream().anyMatch(e -> e.contains("path parameter 'orderId'")), r.toString());
+  }
+
+  @Test
+  void parameters_optionalMissing_isValid() throws Exception {
+    // 'limit' is optional; omitting it must not fail.
+    DefaultMockOpenApiValidator v = paramsValidator();
+    OpenApiValidationResult r =
+        v.validateRequestParameters(
+            SPEC,
+            "listOrderItems",
+            Map.of("status", "open"),
+            Map.of("orderId", "o-1"),
+            Map.of("x-tenant-id", "acme"));
+    assertTrue(r.valid(), r.toString());
+  }
+
+  @Test
+  void parameters_unknownOperation_isSkipped() throws Exception {
+    DefaultMockOpenApiValidator v = paramsValidator();
+    OpenApiValidationResult r =
+        v.validateRequestParameters(SPEC, "nope", Map.of(), Map.of(), Map.of());
+    assertTrue(r.skipped(), r.toString());
+    assertFalse(r.valid(), r.toString());
+  }
+
+  @Test
+  void parameters_operationWithoutParameters_isSkipped() throws Exception {
+    // createPet in the minimal spec declares no parameters.
+    OpenApiValidationResult r =
+        validator30.validateRequestParameters(SPEC, "createPet", Map.of(), Map.of(), Map.of());
+    assertTrue(r.skipped(), r.toString());
   }
 }

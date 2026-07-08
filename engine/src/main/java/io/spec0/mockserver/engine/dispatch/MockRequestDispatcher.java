@@ -106,7 +106,8 @@ public class MockRequestDispatcher {
 
     if (validationMode != SchemaValidationMode.OFF && validator != null) {
       MockResponse validationError =
-          validateIncomingRequest(server.getSpecId(), operationId, request, validationMode);
+          validateIncomingRequest(
+              server.getSpecId(), operationId, request, resolved.pathParams(), validationMode);
       if (validationError != null) {
         return validationError;
       }
@@ -276,7 +277,11 @@ public class MockRequestDispatcher {
   // ── Validation ────────────────────────────────────────────────────────────
 
   private MockResponse validateIncomingRequest(
-      UUID specId, String operationId, MockRequest request, SchemaValidationMode mode) {
+      UUID specId,
+      String operationId,
+      MockRequest request,
+      Map<String, Object> pathParams,
+      SchemaValidationMode mode) {
     byte[] raw = request.rawBodyBytes();
     log.trace(
         "mockRequestValidation start specId={} operationId={} mode={} rawBytes={}",
@@ -302,27 +307,47 @@ public class MockRequestDispatcher {
       }
     }
 
+    List<String> errors = new java.util.ArrayList<>();
+
     JsonNode bodyNode = request.body();
     boolean present = bodyNode != null && !bodyNode.isNull() && !bodyNode.isMissingNode();
-    OpenApiValidationResult result =
+    OpenApiValidationResult bodyResult =
         validator.validateRequestBody(specId, operationId, bodyNode, present);
-
-    if (result.skipped()) {
-      log.trace(
-          "mockRequestValidation outcome=skipped operationId={} skipReason={}",
-          operationId,
-          result.skipReason());
-      return null;
+    if (!bodyResult.skipped() && !bodyResult.valid()) {
+      errors.addAll(bodyResult.errors());
     }
-    if (result.valid()) {
+
+    OpenApiValidationResult paramResult =
+        validator.validateRequestParameters(
+            specId,
+            operationId,
+            request.queryParams(),
+            stringifyPathParams(pathParams),
+            request.headers());
+    if (!paramResult.skipped() && !paramResult.valid()) {
+      errors.addAll(paramResult.errors());
+    }
+
+    if (errors.isEmpty()) {
       log.trace("mockRequestValidation outcome=ok operationId={}", operationId);
       return null;
     }
     if (mode == SchemaValidationMode.WARN) {
-      log.warn("OpenAPI request validation (WARN): {}", result.errors());
+      log.warn("OpenAPI request validation (WARN): {}", errors);
       return null;
     }
-    return requestValidationFailedResponse(operationId, result.errors());
+    return requestValidationFailedResponse(operationId, errors);
+  }
+
+  private static Map<String, String> stringifyPathParams(Map<String, Object> pathParams) {
+    if (pathParams == null || pathParams.isEmpty()) {
+      return Map.of();
+    }
+    Map<String, String> out = new HashMap<>();
+    for (Map.Entry<String, Object> e : pathParams.entrySet()) {
+      out.put(e.getKey(), e.getValue() == null ? null : String.valueOf(e.getValue()));
+    }
+    return out;
   }
 
   private boolean isJsonContentType(MockRequest request) {
@@ -351,7 +376,7 @@ public class MockRequestDispatcher {
     node.put(
         "message",
         String.format(
-            "Request JSON body does not match the OpenAPI schema for operation \"%s\" (application/json).",
+            "Request does not satisfy the OpenAPI contract for operation \"%s\" (JSON body and/or required parameters).",
             operationId));
     var details = objectMapper.createArrayNode();
     for (String e : errors) {
