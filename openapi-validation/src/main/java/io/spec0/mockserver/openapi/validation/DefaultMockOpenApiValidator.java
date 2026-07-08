@@ -8,12 +8,17 @@ import com.networknt.schema.dialect.Dialects;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -176,6 +181,120 @@ public final class DefaultMockOpenApiValidator implements MockOpenApiValidator {
     }
   }
 
+  @Override
+  public OpenApiValidationResult validateRequestParameters(
+      UUID specId,
+      String operationId,
+      Map<String, String> queryParams,
+      Map<String, String> pathParams,
+      Map<String, String> headers) {
+    try {
+      OpenAPI api = cache.get(specId);
+      PathItem pathItem = findPathItem(api, operationId);
+      Operation op = findOperation(api, operationId);
+      if (op == null) {
+        traceSkip("parameters", specId, operationId, null, "operation_not_found_in_openapi");
+        return OpenApiValidationResult.skipped("operation_not_found_in_openapi");
+      }
+      List<Parameter> params = effectiveParameters(pathItem, op);
+      if (params.isEmpty()) {
+        traceSkip("parameters", specId, operationId, null, "no_parameters");
+        return OpenApiValidationResult.skipped("no_parameters");
+      }
+      Map<String, String> query = queryParams == null ? Map.of() : queryParams;
+      Map<String, String> path = pathParams == null ? Map.of() : pathParams;
+      Map<String, String> hdrs = headers == null ? Map.of() : headers;
+
+      List<String> errors = new ArrayList<>();
+      for (Parameter p : params) {
+        if (!Boolean.TRUE.equals(p.getRequired())) {
+          continue;
+        }
+        String name = p.getName();
+        String in = p.getIn();
+        if (name == null || in == null) {
+          continue;
+        }
+        switch (in.toLowerCase(Locale.ROOT)) {
+          case "query" -> {
+            if (isBlank(query.get(name))) {
+              errors.add("Missing required query parameter '" + name + "'");
+            }
+          }
+          case "path" -> {
+            if (isBlank(path.get(name))) {
+              errors.add("Missing required path parameter '" + name + "'");
+            }
+          }
+          case "header" -> {
+            if (isBlank(hdrs.get(name.toLowerCase(Locale.ROOT)))) {
+              errors.add("Missing required header '" + name + "'");
+            }
+          }
+          default -> {
+            // cookie and any other location are out of scope.
+          }
+        }
+      }
+      if (errors.isEmpty()) {
+        log.trace(
+            "validateRequestParameters specId={} operationId={} outcome=ok", specId, operationId);
+        return OpenApiValidationResult.ok();
+      }
+      errors.sort(String::compareTo);
+      if (log.isTraceEnabled()) {
+        log.trace(
+            "validateRequestParameters specId={} operationId={} outcome=failure errors={}",
+            specId,
+            operationId,
+            errors);
+      }
+      return OpenApiValidationResult.failure(errors);
+    } catch (RuntimeException e) {
+      log.trace(
+          "validateRequestParameters specId={} operationId={} outcome=exception type={} msg={}",
+          specId,
+          operationId,
+          e.getClass().getSimpleName(),
+          e.getMessage());
+      return OpenApiValidationResult.failure(
+          List.of("parameter_validation_error: " + e.getMessage()));
+    }
+  }
+
+  private static boolean isBlank(String value) {
+    return value == null || value.isBlank();
+  }
+
+  /**
+   * Merges path-item-level and operation-level parameters, keyed by {@code (name, in)} with the
+   * operation-level parameter winning on collisions (per the OpenAPI spec).
+   */
+  private static List<Parameter> effectiveParameters(PathItem pathItem, Operation op) {
+    Map<String, Parameter> merged = new LinkedHashMap<>();
+    if (pathItem != null && pathItem.getParameters() != null) {
+      for (Parameter p : pathItem.getParameters()) {
+        if (p != null) {
+          merged.put(parameterKey(p), p);
+        }
+      }
+    }
+    if (op.getParameters() != null) {
+      for (Parameter p : op.getParameters()) {
+        if (p != null) {
+          merged.put(parameterKey(p), p);
+        }
+      }
+    }
+    return new ArrayList<>(merged.values());
+  }
+
+  private static String parameterKey(Parameter p) {
+    String in = p.getIn() == null ? "" : p.getIn().toLowerCase(Locale.ROOT);
+    String name = p.getName() == null ? "" : p.getName();
+    return in + ":" + name;
+  }
+
   private MediaType jsonMediaType(io.swagger.v3.oas.models.media.Content content) {
     if (content == null) {
       return null;
@@ -198,6 +317,23 @@ public final class DefaultMockOpenApiValidator implements MockOpenApiValidator {
       for (Operation op : pathItem.readOperationsMap().values()) {
         if (op != null && operationId.equals(op.getOperationId())) {
           return op;
+        }
+      }
+    }
+    return null;
+  }
+
+  private PathItem findPathItem(OpenAPI api, String operationId) {
+    if (api.getPaths() == null) {
+      return null;
+    }
+    for (PathItem pathItem : api.getPaths().values()) {
+      if (pathItem.readOperationsMap() == null) {
+        continue;
+      }
+      for (Operation op : pathItem.readOperationsMap().values()) {
+        if (op != null && operationId.equals(op.getOperationId())) {
+          return pathItem;
         }
       }
     }

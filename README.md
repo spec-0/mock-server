@@ -48,7 +48,7 @@ After the server is up, open **`/ui/index.html`** to register specs, create mock
 
 - **Auto-generated responses** from your OpenAPI spec — no setup beyond uploading the spec
 - **[Variant management](docs/variants-and-strategies.md)** — define multiple named responses per operation with `RANDOM`, `SEQUENTIAL`, `ROUND_ROBIN`, or `DEFAULT_ONLY` strategies
-- **[Schema validation](docs/schema-validation.md)** (`OFF` / `WARN` / `STRICT`) — validate variant bodies against the OpenAPI response schema before saving
+- **[Schema validation](docs/schema-validation.md)** (`OFF` / `WARN` / `STRICT`) — validate variant bodies against the OpenAPI response schema before saving, and validate incoming request bodies plus required query/path/header parameters at request time
 - **[CEL expressions](docs/cel-expressions.md)** — dynamic responses evaluated at request time using request path params, query params, headers, and body
 - **[Request logging](docs/request-logs.md)** — inspect full request/response pairs per mock server with infinite-scroll log viewer
 - **[MCP integration](docs/mcp-integration.md)** — manage mock servers from Claude, Cursor, or any MCP-compatible AI assistant
@@ -66,8 +66,8 @@ Set per mock server via `PATCH /mock-server/servers/{id}/config`:
 | Mode | Behavior |
 |------|----------|
 | `OFF` (default) | No validation. Any response body is accepted. |
-| `WARN` | Body is saved; violations are logged and returned in `validationWarnings`. |
-| `STRICT` | Body is rejected with `400` if it violates the response schema. |
+| `WARN` | Variant bodies are saved with violations logged/returned in `validationWarnings`; incoming request violations (bad body, missing required params) are logged only. |
+| `STRICT` | Variant bodies are rejected with `400` if they violate the response schema; incoming requests are rejected with `400 request_validation_failed` if the body is invalid or a required query/path/header parameter is missing. |
 
 Example — enable STRICT:
 

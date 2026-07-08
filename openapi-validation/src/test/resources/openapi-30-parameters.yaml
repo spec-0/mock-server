@@ -1,0 +1,33 @@
+openapi: 3.0.3
+info:
+  title: Parameters Test API
+  version: "1.0"
+paths:
+  /orders/{orderId}/items:
+    parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listOrderItems
+      parameters:
+        - name: status
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: X-Tenant-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ok
