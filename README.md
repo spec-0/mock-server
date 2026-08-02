@@ -120,6 +120,17 @@ mvn -pl standalone -am package -DskipTests
 java -jar standalone/target/mock-server-standalone-*-exec.jar
 ```
 
+> **Versions.** The pom says `1.0-SNAPSHOT` on every branch *and every tag* — release versions are
+> applied by CI at publish time, not committed. So a build from a release tag produces
+> `1.0-SNAPSHOT` artifacts unless you set the version yourself:
+>
+> ```bash
+> mvn versions:set -DnewVersion=1.2.0 -DgenerateBackupPoms=false -DprocessAllModules=true
+> ```
+>
+> This matters if you want a local `mvn install` to satisfy a dependency on a published version —
+> without it the coordinates won't match and resolution falls back to the registry.
+
 Run all tests:
 
 ```bash

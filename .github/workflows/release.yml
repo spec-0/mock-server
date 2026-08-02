@@ -28,6 +28,19 @@ jobs:
         with:
           node-version: '18'
 
+      # The pom carries 1.0-SNAPSHOT on every branch and tag; the real version is set here, from
+      # the tag. Without this the fat JAR is built and uploaded as
+      # mock-server-standalone-1.0-SNAPSHOT-exec.jar, and the JAR inside the Docker image reports
+      # 1.0-SNAPSHOT at runtime even though the image tag is correct.
+      #
+      # publish.yml does the same thing for the Maven artifacts. The two must agree: they are
+      # triggered by the same tag and would otherwise ship the same release under two versions.
+      - name: Set Maven version from tag
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          echo "Building release artifacts as version $VER"
+          ./mvnw versions:set -DnewVersion="$VER" -DgenerateBackupPoms=false -DprocessAllModules=true
+
       - name: Build UI
         working-directory: ui
         run: npm ci && npm run build
