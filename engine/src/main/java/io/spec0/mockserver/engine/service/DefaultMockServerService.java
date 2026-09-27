@@ -13,7 +13,9 @@ import io.spec0.mockserver.engine.spi.MockServerPersistencePort;
 import io.spec0.mockserver.mockgen.MockingClient;
 import io.spec0.mockserver.openapi.validation.OpenApiSpecJson;
 import io.swagger.v3.core.util.Json;
+import io.swagger.v3.core.util.Json31;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.SpecVersion;
 import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import java.util.List;
@@ -318,7 +320,11 @@ public class DefaultMockServerService implements MockServerServicePort {
               .readContents(OpenApiSpecJson.toParseableJson(specContent), null, opts)
               .getOpenAPI();
       if (api != null) {
-        return Json.mapper().writeValueAsString(api);
+        // 3.1 models must be written with the 3.1 mapper, otherwise schema types and examples
+        // arrays are dropped and mock generation loses most of the schema.
+        return api.getSpecVersion() == SpecVersion.V31
+            ? Json31.mapper().writeValueAsString(api)
+            : Json.mapper().writeValueAsString(api);
       }
     } catch (Exception e) {
       log.warn("Could not convert spec to JSON for mock generation: {}", e.getMessage());

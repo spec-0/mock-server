@@ -5,6 +5,7 @@ Every operation in your OpenAPI spec can have one or more **variants** — named
 ## Contents
 
 - [What is a variant?](#what-is-a-variant)
+- [Generated default responses](#generated-default-responses)
 - [Creating variants](#creating-variants)
 - [Response strategies](#response-strategies)
 - [Forcing a specific status code](#forcing-a-specific-status-code)
@@ -24,6 +25,44 @@ A variant has the following fields:
 | **Headers** | Optional extra response headers |
 | **Default flag** | Whether this is the default for the `DEFAULT_ONLY` strategy |
 | **CEL expression** | Optional dynamic expression evaluated at request time (see [CEL Expressions](./cel-expressions.md)) |
+
+---
+
+## Generated default responses
+
+When you create a mock server, it makes one **default variant** for every operation. The body of that variant is built from your spec, so you get a working response without writing anything.
+
+The mock server uses the data you already wrote in the spec whenever it can. For each value it picks the first of these that exists:
+
+1. An `example` (or the first of the named `examples`) on the response's media type, e.g. under `application/json`.
+2. An `example` on the schema. This works on component schemas used through `$ref`, on array `items`, and on each property.
+3. The first entry of the schema's `examples` list (OpenAPI 3.1).
+4. The schema's `default`.
+5. The schema's `const`.
+6. The first value of the schema's `enum`.
+7. A made-up value that fits the `format`, e.g. a real-looking email for `format: email`, or a UUID for `format: uuid`.
+8. A random placeholder value (a short word, a number, `true`/`false`).
+
+Objects and arrays are filled in one field at a time with the same rules, so nested objects and lists also use your examples. `allOf` parts are merged into one object; for `oneOf` and `anyOf` the first option is used.
+
+For example, with this schema:
+
+```yaml
+Book:
+  type: object
+  properties:
+    id: { type: string, example: "b-1" }
+    title: { type: string, example: "The Pragmatic Programmer" }
+```
+
+a `GET /books` that returns an array of `Book` gives `[{"id": "b-1", "title": "The Pragmatic Programmer"}]`.
+
+A few things to know:
+
+- The body is built **once**, when the mock server is created. Every request then returns the same stored body. Change the spec and recreate the mock server (or edit the variant) to get a new one.
+- Values that come from your spec are always the same. Only fields with no example, default, const or enum get random values, and those are chosen once at creation time, not per request.
+- The `RANDOM` strategy below picks **which variant** to return. It does not change the generated data inside a variant.
+- For values that change on every request (fresh IDs, timestamps, echoing the request), use a [CEL expression](./cel-expressions.md).
 
 ---
 
