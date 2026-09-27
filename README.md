@@ -46,7 +46,7 @@ After the server is up, open **`/ui/index.html`** to register specs, create mock
 
 ## Features
 
-- **Auto-generated responses** from your OpenAPI spec — no setup beyond uploading the spec
+- **[Auto-generated responses](docs/variants-and-strategies.md#generated-default-responses)** from your OpenAPI spec — uses your spec's `example` values first, then `default` / `enum`, then realistic made-up data
 - **[Variant management](docs/variants-and-strategies.md)** — define multiple named responses per operation with `RANDOM`, `SEQUENTIAL`, `ROUND_ROBIN`, or `DEFAULT_ONLY` strategies
 - **[Schema validation](docs/schema-validation.md)** (`OFF` / `WARN` / `STRICT`) — validate variant bodies against the OpenAPI response schema before saving, and validate incoming request bodies plus required query/path/header parameters at request time
 - **[CEL expressions](docs/cel-expressions.md)** — dynamic responses evaluated at request time using request path params, query params, headers, and body

@@ -18,7 +18,7 @@ A self-hosted OpenAPI mock server. Register a spec, get instant mock responses, 
 
 | | |
 |---|---|
-| [Variants & Response Strategies](./variants-and-strategies.md) | Define multiple responses per operation; choose `RANDOM`, `SEQUENTIAL`, `ROUND_ROBIN`, or `DEFAULT_ONLY` |
+| [Variants & Response Strategies](./variants-and-strategies.md) | How default responses are generated from your spec's examples; define multiple responses per operation; choose `RANDOM`, `SEQUENTIAL`, `ROUND_ROBIN`, or `DEFAULT_ONLY` |
 | [CEL Expressions](./cel-expressions.md) | Write dynamic response logic evaluated at request time |
 | [Schema Validation](./schema-validation.md) | Validate variant bodies against your OpenAPI spec (`OFF` / `WARN` / `STRICT`) |
 
